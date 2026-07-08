@@ -279,6 +279,8 @@ No API framework. No frontend framework. Just Python files.
 - [ ] Write a short blog post or Twitter thread about what you learned
 - [ ] Set up a simple project board for v2 features
 - [ ] Plan your v2 milestones based on what you learned
+- [ ] **Log real search queries** — add a `query_log` table to SQLite: `(query TEXT, timestamp TEXT)`. Log every search in app.py. Goal: capture what you actually type, not what you predict you'll type. After 2-3 weeks, export and manually label which note each query should retrieve → that becomes dataset2. (Stage 2: add click tracking once the query pattern is understood.)
+- [ ] **Add content_type + date filter to search** — add date range picker (today / this week / this month / all time) and content_type toggle (voice / text / image / all) to Search page. These run as ChromaDB `where` metadata filters before vector search. Temporal queries ("how I felt end of day", "intention for tomorrow", "what I did this week") are unsolvable by embedding alone — metadata filtering is the only fix.
 
 **Done when:** Code is on GitHub. You've used it for a week. You know what to build next.
 
@@ -302,7 +304,9 @@ No API framework. No frontend framework. Just Python files.
 - [ ] Build a proper REST API (FastAPI)
 - [ ] Mobile native app
 - [ ] Offline support
-- [ ] Better embedding model (finish comparison from scratch.md)
+- [ ] Better embedding model (finish comparison from scratch.md — experiments 2b/3/4 defined in docs/search_experiments.md)
+- [ ] Query intent classification — detect retrieval-type ("show me my note about X") vs QA-type ("what have I learned about X?"); retrieval → return notes, QA → retrieve top-k + generate answer with LLM; simple heuristic first: question words (how, why, what should) → QA mode
+- [ ] Multi-answer eval — extend eval_set.jsonl to support `expected_note_ids: [id1, id2]` for queries with multiple valid answers; update grader.py to score against the set (finding from experiment analysis)
 - [ ] LangGraph for smarter search
 - [ ] Graph database for note relationships
 - [ ] Local LLM instead of OpenAI API
