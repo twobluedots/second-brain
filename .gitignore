@@ -1,0 +1,53 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Secrets
+.env
+
+# Personal data
+data/*
+entries/*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Runtime databases and indexes
+*.db
+chroma_data/
+logs/
+
+# Experiments that didn't work
+experiments/failed_*
+experiments/old_*
+
+# Generated experiment artifacts (indexes + results)
+experiments/artifacts/
+experiments/experiment_*.py
+experiments/simple_experiment.py
+experiments/test_*.py
+experiments/data/voice/
+experiments/*.json
+experiments/*.txt
+experiments/data/note_analysis.json
+experiments/data/dataset1/ragas_testset/
+
+# Root-level experiment result dumps
+embedding_comparison_*.json
+experiment_results_*.json
+whisper_results_*.json
+
+# Keep structure but not content
+!data/notes/.gitkeep
+!data/voice_recordings/.gitkeep
+!data/images/.gitkeep
