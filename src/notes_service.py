@@ -60,8 +60,20 @@ class NoteService:
     def get_recent(self, limit: int = 10):
         return self.storage.get_recent(limit)
 
-    def search(self, query: str):
-        return self.storage.search(query)
+    def search(self, query: str, content_type: str = None, date_from: str = None):
+        clauses = []
+        if content_type and content_type != "all":
+            clauses.append({"content_type": {"$eq": content_type}})
+        if date_from:
+            ts = int(datetime.fromisoformat(date_from.replace("Z", "+00:00")).timestamp())
+            clauses.append({"created_at_ts": {"$gte": ts}})
+        where = None
+        if len(clauses) == 1:
+            where = clauses[0]
+        elif len(clauses) > 1:
+            where = {"$and": clauses}
+        self.storage.log_query(query)
+        return self.storage.search(query, where=where)
 
     def get_by_date_range(self, start: str, end: str):
         return self.storage.get_by_date_range(start, end)

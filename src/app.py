@@ -1,7 +1,7 @@
 import streamlit as st
 import os
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from src.logger import logger
@@ -268,9 +268,38 @@ if page == "Capture":
 elif page == "Search":
     st.title("🔍 Search")
     query = st.text_input("What are you looking for?")
+
+    col_date, col_type = st.columns(2)
+    with col_date:
+        date_preset = st.segmented_control(
+            "When",
+            options=["All time", "Today", "This week", "This month"],
+            default="All time",
+            key="search_date_preset",
+        )
+    with col_type:
+        content_type_filter = st.segmented_control(
+            "Type",
+            options=["All", "Text", "Voice", "Image"],
+            default="All",
+            key="search_content_type",
+        )
+
     if st.button("Search"):
+        now = datetime.now(timezone.utc)
+        if date_preset == "Today":
+            date_from = now.replace(hour=0, minute=0, second=0, microsecond=0).strftime("%Y-%m-%dT%H:%M:%SZ")
+        elif date_preset == "This week":
+            date_from = (now - timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        elif date_preset == "This month":
+            date_from = (now - timedelta(days=30)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        else:
+            date_from = None
+
+        content_type_val = None if content_type_filter == "All" else content_type_filter.lower()
+
         try:
-            results = service.search(query)
+            results = service.search(query, content_type=content_type_val, date_from=date_from)
             if results:
                 for entry in results:
                     render_entry_card(entry, key_prefix="edit_search")
@@ -385,8 +414,6 @@ elif page == "Journal":
             st.markdown(f"**{time_str}** — {entry['content']}")
 
 elif page == "Mirror":
-    from datetime import timedelta
-
     st.title("Mirror")
 
     try:

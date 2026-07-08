@@ -39,6 +39,7 @@ class Storage:
 
         # Initialize SQLite
         self._init_db()
+        self._migrate_chroma_timestamps()
         logger.info("Storage initialised (db=%s, chroma=%s)", self.db_path, self.chroma_path)
 
     # ============================================================================
@@ -123,6 +124,12 @@ class Storage:
                     FOREIGN KEY (entry_id) REFERENCES entries(id)
                 );
 
+                CREATE TABLE IF NOT EXISTS query_log (
+                    id TEXT PRIMARY KEY,
+                    query TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                );
+
                 CREATE INDEX IF NOT EXISTS idx_entries_created_at ON entries(created_at);
                 CREATE INDEX IF NOT EXISTS idx_entries_deleted_at ON entries(deleted_at);
                 CREATE INDEX IF NOT EXISTS idx_entries_category ON entries(category);
@@ -136,6 +143,23 @@ class Storage:
                     (cat, self._iso_now())
                 )
         logger.info("SQLite schema initialised (db=%s)", self.db_path)
+
+    def _migrate_chroma_timestamps(self):
+        """Backfill created_at_ts (int) for existing ChromaDB documents that don't have it."""
+        try:
+            existing = self.collection.get(include=["metadatas"])
+            needs_update = [
+                (id_, meta)
+                for id_, meta in zip(existing["ids"], existing["metadatas"])
+                if "created_at_ts" not in meta and meta.get("created_at")
+            ]
+            for id_, meta in needs_update:
+                ts = int(datetime.fromisoformat(meta["created_at"].replace("Z", "+00:00")).timestamp())
+                self.collection.update(ids=[id_], metadatas=[{**meta, "created_at_ts": ts}])
+            if needs_update:
+                logger.info("Migrated created_at_ts for %d ChromaDB documents", len(needs_update))
+        except Exception as e:
+            logger.warning("ChromaDB timestamp migration failed: %s", e)
 
     # ============================================================================
     # WRITE OPERATIONS
@@ -178,6 +202,7 @@ class Storage:
                     metadatas=[{
                         "content_type": entry.content_type,
                         "created_at": now,
+                        "created_at_ts": int(datetime.fromisoformat(now.replace("Z", "+00:00")).timestamp()),
                         "category": entry.category or "uncategorized"
                     }]
                 )
@@ -378,15 +403,27 @@ class Storage:
     # SEARCH OPERATIONS
     # ============================================================================
 
-    def search(self, query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> List[Dict]:
+    def log_query(self, query: str) -> None:
+        """Log a search query for future eval dataset building."""
+        try:
+            with self._connect() as conn:
+                conn.execute(
+                    "INSERT INTO query_log (id, query, created_at) VALUES (?, ?, ?)",
+                    (str(uuid.uuid4()), query, self._iso_now())
+                )
+        except Exception as e:
+            logger.warning("Query logging failed: %s", e)
+
+    def search(self, query: str, limit: int = DEFAULT_SEARCH_LIMIT, where: Optional[Dict] = None) -> List[Dict]:
         """
         Semantic search across entries using ChromaDB.
         Returns structured results with full entry data from SQLite.
-        
+
         Args:
             query: Search query string
             limit: Max results to return
-        
+            where: Optional ChromaDB metadata filter (e.g. content_type, created_at range)
+
         Returns:
             List of entry dicts, ordered by relevance
         """
@@ -394,7 +431,10 @@ class Storage:
         if actual_limit == 0:
             return []
         try:
-            results = self.collection.query(query_texts=[query], n_results=actual_limit)
+            kwargs: Dict = {"query_texts": [query], "n_results": actual_limit}
+            if where:
+                kwargs["where"] = where
+            results = self.collection.query(**kwargs)
         except Exception as e:
             logger.error("ChromaDB search failed: %s", e)
             raise
