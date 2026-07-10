@@ -124,9 +124,12 @@ class Storage:
                     FOREIGN KEY (entry_id) REFERENCES entries(id)
                 );
 
-                CREATE TABLE IF NOT EXISTS query_log (
+                CREATE TABLE IF NOT EXISTS search_log (
                     id TEXT PRIMARY KEY,
-                    query TEXT NOT NULL,
+                    query TEXT,
+                    content_type TEXT,
+                    date_preset TEXT,
+                    result_count INTEGER NOT NULL,
                     created_at TEXT NOT NULL
                 );
 
@@ -361,6 +364,24 @@ class Storage:
             entry["tags"] = json.loads(entry["tags"])
         return entry
 
+    def get_entries(self, content_type: Optional[str] = None, date_from: Optional[str] = None, limit: int = 50) -> List[Dict]:
+        """SQLite-only retrieval with optional filters. Used when there is no text query for vector search."""
+        clauses = ["deleted_at IS NULL"]
+        params: list = []
+        if content_type:
+            clauses.append("content_type = ?")
+            params.append(content_type)
+        if date_from:
+            clauses.append("created_at >= ?")
+            params.append(date_from)
+        params.append(limit)
+        with self._connect() as conn:
+            rows = conn.execute(
+                f"SELECT * FROM entries WHERE {' AND '.join(clauses)} ORDER BY created_at DESC LIMIT ?",
+                params
+            ).fetchall()
+        return [self._parse_entry(self._dict(row)) for row in rows]
+
     # ============================================================================
     # CATEGORY OPERATIONS
     # ============================================================================
@@ -403,16 +424,16 @@ class Storage:
     # SEARCH OPERATIONS
     # ============================================================================
 
-    def log_query(self, query: str) -> None:
-        """Log a search query for future eval dataset building."""
+    def log_search(self, query: Optional[str], content_type: Optional[str], date_preset: Optional[str], result_count: int) -> None:
+        """Log a search event — query text nullable (filter-only searches have no text)."""
         try:
             with self._connect() as conn:
                 conn.execute(
-                    "INSERT INTO query_log (id, query, created_at) VALUES (?, ?, ?)",
-                    (str(uuid.uuid4()), query, self._iso_now())
+                    "INSERT INTO search_log (id, query, content_type, date_preset, result_count, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+                    (str(uuid.uuid4()), query or None, content_type, date_preset, result_count, self._iso_now())
                 )
         except Exception as e:
-            logger.warning("Query logging failed: %s", e)
+            logger.warning("Search logging failed: %s", e)
 
     def search(self, query: str, limit: int = DEFAULT_SEARCH_LIMIT, where: Optional[Dict] = None) -> List[Dict]:
         """

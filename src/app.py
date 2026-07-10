@@ -299,7 +299,7 @@ elif page == "Search":
         content_type_val = None if content_type_filter == "All" else content_type_filter.lower()
 
         try:
-            results = service.search(query, content_type=content_type_val, date_from=date_from)
+            results = service.search(query, content_type=content_type_val, date_from=date_from, date_preset=date_preset)
             if results:
                 for entry in results:
                     render_entry_card(entry, key_prefix="edit_search")

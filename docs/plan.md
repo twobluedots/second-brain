@@ -279,8 +279,7 @@ No API framework. No frontend framework. Just Python files.
 - [ ] Write a short blog post or Twitter thread about what you learned
 - [ ] Set up a simple project board for v2 features
 - [ ] Plan your v2 milestones based on what you learned
-- [ ] **Log real search queries** — add a `query_log` table to SQLite: `(query TEXT, timestamp TEXT)`. Log every search in app.py. Goal: capture what you actually type, not what you predict you'll type. After 2-3 weeks, export and manually label which note each query should retrieve → that becomes dataset2. (Stage 2: add click tracking once the query pattern is understood.)
-- [ ] **Add content_type + date filter to search** — add date range picker (today / this week / this month / all time) and content_type toggle (voice / text / image / all) to Search page. These run as ChromaDB `where` metadata filters before vector search. Temporal queries ("how I felt end of day", "intention for tomorrow", "what I did this week") are unsolvable by embedding alone — metadata filtering is the only fix.
+- [x] **Search log + date/type filters** — replaced `query_log` with unified `search_log` (query nullable, + content_type, date_preset, result_count). Search page has date preset buttons (Today / This week / This month / All time) and type filter (All / Text / Voice / Image). Text present → ChromaDB with metadata pre-filters; no text → SQLite `get_entries()` directly. `created_at_ts` (Unix int) backfilled in ChromaDB to enable `$gte` range filters. See decisions.md 2026-07-10.
 
 **Done when:** Code is on GitHub. You've used it for a week. You know what to build next.
 

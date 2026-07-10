@@ -574,6 +574,33 @@ app.py → notes_service.py → categorize.py + storage.py
 
 ---
 
+### 2026-07-10: [M4] Unified search_log — replacing query_log, merging search paths
+
+**What I decided:**
+- Replaced `query_log` (text-only, never-null) with `search_log` capturing full context: `query` (nullable), `content_type`, `date_preset`, `result_count`
+- `NoteService.search()` handles both execution paths in one method: text present → ChromaDB vector search with metadata pre-filters; no text → SQLite `get_entries()` with the same filters directly
+- `Storage.get_entries()` added as a SQLite-only retrieval method (dynamic WHERE clause, no ChromaDB)
+- `created_at_ts` (Unix int) stored in ChromaDB metadata alongside `created_at` ISO string — enables `$gte`/`$lte` range filters (ChromaDB only supports numeric operators for ranges)
+- One-time migration backfills `created_at_ts` for all existing ChromaDB documents on Storage init
+
+**Why:**
+- `query_log` logged empty strings when filters were used without text — meaningless data
+- ChromaDB `$gte` only accepts numbers, not ISO strings — `created_at_ts` is the fix
+- Vector search on an empty string is meaningless; SQLite handles filter-only queries directly
+- One `search()` method means the caller never has to choose which path to use
+- `search_log` with nullable query serves both use cases: filter `WHERE query IS NOT NULL` → eval dataset; all rows → usage analytics (filter popularity, result counts)
+
+**Trade-offs:**
+- ✅ Single caller interface for all search scenarios
+- ✅ `result_count` in the log reveals which searches succeed — signals dataset gaps
+- ✅ `date_preset` stored as a UI label ("This week") — human-readable for analytics
+- ❌ Two metadata timestamps in ChromaDB (`created_at` string + `created_at_ts` int) — redundant but ChromaDB's limitation forces it
+- ❌ `date_preset` label depends on when the log was written (e.g. "This week" means different dates each time)
+
+**When to reconsider:** When building the eval pipeline, join `search_log` with a future click-tracking table to know which result the user actually opened. That pair is the ground-truth dataset.
+
+---
+
 ### 2026-06-12: Categories table — one-time cleanup of stale entries
 
 **What I decided:** Ran a one-time SQL delete to remove stale categories (`exercise`, `idea`, `memory`, `thought`) from the `categories` table.

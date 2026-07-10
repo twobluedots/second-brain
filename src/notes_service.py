@@ -60,20 +60,24 @@ class NoteService:
     def get_recent(self, limit: int = 10):
         return self.storage.get_recent(limit)
 
-    def search(self, query: str, content_type: str = None, date_from: str = None):
-        clauses = []
-        if content_type and content_type != "all":
-            clauses.append({"content_type": {"$eq": content_type}})
-        if date_from:
-            ts = int(datetime.fromisoformat(date_from.replace("Z", "+00:00")).timestamp())
-            clauses.append({"created_at_ts": {"$gte": ts}})
-        where = None
-        if len(clauses) == 1:
-            where = clauses[0]
-        elif len(clauses) > 1:
-            where = {"$and": clauses}
-        self.storage.log_query(query)
-        return self.storage.search(query, where=where)
+    def search(self, query: str, content_type: str = None, date_from: str = None, date_preset: str = None):
+        # Two execution paths for the same intent ("give me entries matching these criteria"):
+        # - text present → ChromaDB vector search, metadata filters applied as pre-filters
+        # - no text → SQLite only, filters run directly (vector search on empty string is meaningless)
+        if query.strip():
+            clauses = []
+            if content_type and content_type != "all":
+                clauses.append({"content_type": {"$eq": content_type}})
+            if date_from:
+                ts = int(datetime.fromisoformat(date_from.replace("Z", "+00:00")).timestamp())
+                clauses.append({"created_at_ts": {"$gte": ts}})
+            where = None if not clauses else (clauses[0] if len(clauses) == 1 else {"$and": clauses})
+            results = self.storage.search(query, where=where)
+        else:
+            ct = content_type if content_type and content_type != "all" else None
+            results = self.storage.get_entries(content_type=ct, date_from=date_from)
+        self.storage.log_search(query=query or None, content_type=content_type, date_preset=date_preset, result_count=len(results))
+        return results
 
     def get_by_date_range(self, start: str, end: str):
         return self.storage.get_by_date_range(start, end)
