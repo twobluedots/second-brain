@@ -5,6 +5,7 @@ All methods return dict or list[dict], never raw Row objects.
 """
 
 import chromadb
+from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 from contextlib import contextmanager
 from datetime import datetime, timezone
 import json
@@ -13,7 +14,7 @@ import sqlite3
 from typing import Optional, List, Dict
 import uuid
 
-from config import DB_PATH, CHROMA_PATH, DEFAULT_CATEGORIES, DEFAULT_SEARCH_LIMIT
+from config import DB_PATH, CHROMA_PATH, DEFAULT_CATEGORIES, DEFAULT_SEARCH_LIMIT, EMBEDDING_MODEL, BGE_QUERY_INSTRUCTION
 from src.logger import logger
 from src.models import Entry
 
@@ -35,7 +36,11 @@ class Storage:
 
         # Initialize ChromaDB
         self.chroma = chromadb.PersistentClient(path=str(self.chroma_path))
-        self.collection = self.chroma.get_or_create_collection(name="entries")
+        self._ef = SentenceTransformerEmbeddingFunction(model_name=EMBEDDING_MODEL)
+        self.collection = self.chroma.get_or_create_collection(
+            name="entries",
+            embedding_function=self._ef
+        )
 
         # Initialize SQLite
         self._init_db()
@@ -364,7 +369,7 @@ class Storage:
             entry["tags"] = json.loads(entry["tags"])
         return entry
 
-    def get_entries(self, content_type: Optional[str] = None, date_from: Optional[str] = None, limit: int = 50) -> List[Dict]:
+    def get_entries(self, content_type: Optional[str] = None, date_from: Optional[str] = None, category: Optional[str] = None, limit: int = 50) -> List[Dict]:
         """SQLite-only retrieval with optional filters. Used when there is no text query for vector search."""
         clauses = ["deleted_at IS NULL"]
         params: list = []
@@ -374,6 +379,9 @@ class Storage:
         if date_from:
             clauses.append("created_at >= ?")
             params.append(date_from)
+        if category:
+            clauses.append("category = ?")
+            params.append(category)
         params.append(limit)
         with self._connect() as conn:
             rows = conn.execute(
@@ -452,7 +460,7 @@ class Storage:
         if actual_limit == 0:
             return []
         try:
-            kwargs: Dict = {"query_texts": [query], "n_results": actual_limit}
+            kwargs: Dict = {"query_texts": [BGE_QUERY_INSTRUCTION + query], "n_results": actual_limit}
             if where:
                 kwargs["where"] = where
             results = self.collection.query(**kwargs)
@@ -462,7 +470,7 @@ class Storage:
         
         if not results or not results["ids"] or not results["ids"][0]:
             return []
-        
+
         # Fetch full entries from SQLite using IDs from ChromaDB
         entry_ids = results["ids"][0]
         entries = []
@@ -470,5 +478,50 @@ class Storage:
             entry = self.get_by_id(entry_id)
             if entry:
                 entries.append(entry)
-        
+
         return entries
+
+    def reindex_all(self) -> int:
+        """Wipe ChromaDB collection and re-index all active entries from SQLite."""
+        try:
+            self.chroma.delete_collection(name="entries")
+        except Exception:
+            pass
+        self.collection = self.chroma.create_collection(
+            name="entries",
+            embedding_function=self._ef
+        )
+
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM entries WHERE deleted_at IS NULL"
+            ).fetchall()
+
+        count = 0
+        for row in rows:
+            entry = self._parse_entry(self._dict(row))
+            searchable_text = "\n".join(filter(None, [entry.get("content"), entry.get("description")]))
+            if not searchable_text:
+                continue
+            created_at = entry.get("created_at", self._iso_now())
+            try:
+                ts = int(datetime.fromisoformat(created_at.replace("Z", "+00:00")).timestamp())
+            except Exception:
+                ts = 0
+            try:
+                self.collection.add(
+                    ids=[entry["id"]],
+                    documents=[searchable_text],
+                    metadatas=[{
+                        "content_type": entry.get("content_type", "text"),
+                        "created_at": created_at,
+                        "created_at_ts": ts,
+                        "category": entry.get("category") or "uncategorized"
+                    }]
+                )
+                count += 1
+            except Exception as e:
+                logger.warning("Reindex failed for %s: %s", entry["id"], e)
+
+        logger.info("Reindexed %d entries in ChromaDB", count)
+        return count

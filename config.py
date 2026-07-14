@@ -49,5 +49,9 @@ CATEGORY_MIRROR_LINES = {
 # Local model for Ollama fallback (change to whichever you have pulled)
 OLLAMA_MODEL = "llama3.2"
 
+# Embedding model for ChromaDB semantic search
+EMBEDDING_MODEL = "BAAI/bge-large-en-v1.5"
+BGE_QUERY_INSTRUCTION = "Represent this sentence for searching relevant passages: "
+
 # Search defaults
 DEFAULT_SEARCH_LIMIT = 10
