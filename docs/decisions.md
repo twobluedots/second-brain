@@ -655,3 +655,96 @@ DELETE FROM categories WHERE name NOT IN ('task','mood','journal','learning','re
 - Widen rediscovery pool if insight/achievement notes feel too sparse in practice.
 - Rediscovery length cap: 300 chars chosen without much data — revisit if good notes are being excluded.
 - Streak concept: think about how to make it engaging without the guilt of resetting — needs more thought before building.
+
+---
+
+### 2026-07-13: [M4.2] Embedding model — switched from all-MiniLM-L6-v2 to bge-large-en-v1.5
+
+**What I decided:** Replaced ChromaDB's default embedding model (`all-MiniLM-L6-v2`) with `BAAI/bge-large-en-v1.5`. Configured via `EMBEDDING_MODEL` in `config.py`. Query-time instruction prefix applied in `storage.search()`.
+
+**Why:**
+- Experiment results on 36-note dataset: Rank@1 improved from 61% → 72%, Avg Precision from 0.698 → 0.783
+- bge-large is notably better at emotional/mood queries and journal/venting entries — the most common note types in this app
+- `sentence-transformers` was already a dependency — no new packages needed
+
+**What I tried first:** Default ChromaDB embedding (all-MiniLM-L6-v2, 384 dims, 22M params)
+
+**Trade-offs:**
+- ✅ +11% Rank@1, +0.085 Avg Precision on real-note dataset
+- ✅ Better emotional query handling (key for mood/journal retrieval)
+- ❌ bge-large regresses on abstract/metaphorical queries — but these are rare in practice
+- ❌ Slower inference and larger model (~335M params, ~1.3GB download on first run)
+- ❌ Dimension change (384 → 1024) required wiping and re-indexing ChromaDB
+
+**Migration:** Deleted `chroma_data/`, re-indexed 151 entries via `scripts/reindex_chroma.py`. SQLite is source of truth — no data loss risk.
+
+**When to reconsider:** If inference speed becomes noticeably annoying during daily use, switch back to `all-MiniLM-L6-v2` in `config.py` and re-run `scripts/reindex_chroma.py`.
+
+---
+
+### 2026-07-13: [M4.2] RAG pipeline — query analyzer design
+
+**What I decided:**
+- Query analyzer is LLM call #1 in the RAG pipeline: takes raw user text, returns a `QueryPlan` dataclass with `{intent, time_filter, category_filter, content_type, k}`
+- Provider chain: OpenAI → Anthropic → plain default (no heuristics)
+- Plain default: `{intent: "qa", k: 8, everything else: null}` — "do a semantic search and synthesize an answer"
+- Lives in `src/rag/analyzer.py`; the full pipeline lives in `src/rag/` (analyzer, retrieval, generator)
+
+**Intent types and k values:**
+| Intent | Triggered by | k |
+|---|---|---|
+| browse | wants a list ("show me", "list", "find all") | 0 (no LLM generation) |
+| factual | specific stored fact ("where did I put", named item) | 5 |
+| qa | open question needing synthesis | 8 |
+| pattern | aggregation over time ("lately", "how has my mood been") | 20 |
+
+**Why no heuristic fallback:**
+- Heuristics are English-only — Turkish queries won't match
+- Brittle to phrasing variations — the list grows forever as edge cases appear
+- Both providers being simultaneously down is rare; plain default is honest and safe in that case
+- If fallback triggers too often in real use, add Ollama then (don't build for a rare edge case)
+
+**Why plain default is "qa" not "browse":**
+- "qa" (semantic search + generate answer) is a reasonable response to almost any query
+- "browse" (return a list) is less useful when we don't know the intent — a generated answer is more helpful than a random list of notes
+
+**When to reconsider:** Add Ollama as third fallback if logs show `"All query analysis providers failed"` appearing frequently in real use.
+
+---
+
+### 2026-07-13: [M4.2] RAG retrieval — category filter is hard gate for browse, hint for everything else
+
+**What I decided:**
+- `category_filter` from the QueryPlan is applied as a hard ChromaDB filter **only for browse intent**
+- For factual/qa/pattern intents, `category_filter` is passed to the generator as context — not used to filter retrieval
+- Semantic search retrieves notes regardless of category; the LLM judges relevance
+
+**Why:**
+- Categorization accuracy is ~75% (9/12 in M2 tests) — 1 in 4 notes may be miscategorized
+- Hard filtering at retrieval on an imperfect category means silently missing notes. For a factual query ("where did I put my manual?"), a miscategorized note returns nothing — wrong answer with no signal that something was missed
+- Browse is the exception: user explicitly said "show me my tasks" — they are choosing to filter by category. They see a list and can notice gaps themselves
+
+**Implication:**
+- `retrieval.py`: builds `where` clause with category only when `intent == "browse"`
+- `generator.py`: receives `category_filter` as a hint in the prompt for non-browse intents ("user was asking about their learning notes")
+
+**When to reconsider:** Once category override data accumulates (from `category_events` table), calculate real per-category accuracy. If any category reaches >95% accuracy consistently, it's safe to use as a hard filter for that category.
+
+---
+
+### 2026-07-13: Process — re-cut M4 around the ask-a-question loop; two-track workflow adopted
+
+**What I decided:**
+- MVP bar is the end-to-end loop "ask a question, get an answer" (came from a real-user test: my husband asked exactly this). Sequence: commit RAG pipeline → minimal Ask page → README + cleanup + GitHub push → then a **2–3 week usage period** with no new features.
+- Adopted a two-track workflow: **build sessions** (small predefined weekly tasks, one task = one commit = one decision entry) and **learning sessions** (curiosity-driven, must end with an artifact in `docs/learning/`). Full guide: [`workflow.md`](workflow.md).
+- Tasks over ~1 hr get a half-page spec first ([`design/_template.md`](design/_template.md)); implementation standards decided once and applied via [`engineering-standards.md`](engineering-standards.md).
+
+**Why:**
+- Review of 33 past sessions showed finishing repeatedly lost to starting: M4 ship tasks deferred while new scope (RAG, embeddings, tags design) kept arriving; work sat uncommitted for weeks; learning threads swallowed build sessions.
+- The usage period doubles as data collection: real queries land in `search_log` and become the realistic eval dataset the learning track was missing.
+
+**Trade-offs:**
+- ✅ Both goals (usable app + learning/interview prep) get dedicated space and feed each other
+- ❌ Curiosity-driven detours during build sessions now get parked, which takes discipline
+
+**When to reconsider:** At a weekly check-in, if the split feels heavier than the problem it solves — simplify the rules, don't abandon the separation.

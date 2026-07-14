@@ -51,6 +51,22 @@ No API framework. No frontend framework. Just Python files.
 
 ---
 
+## This Week (Mon 2026-07-13 → Fri 2026-07-17) — close v1
+
+Day shape: AM block = app, PM block = eval/learning (see [workflow.md](workflow.md)). Long-term vision lives in [roadmap.md](roadmap.md).
+
+- [ ] **Tue AM (app)** — ask_log: confirm open decisions in [design/M4.2b-ask-log.md](design/M4.2b-ask-log.md) → write round-trip test myself → implement → Ask page shakedown with logging live (8–10 real questions, one per intent, incl. voice; failures → bugs.md)
+- [ ] **Tue PM (vision)** — vision session → fill [roadmap.md](roadmap.md) (agenda questions inside)
+- [ ] **Wed AM (app)** — fix search edit-dialog bug (bugs.md) + any urgent shakedown findings
+- [ ] **Wed PM (eval)** — learning session: faithfulness / answer-relevance mechanics → wrap artifact
+- [ ] **Thu AM (app)** — README rewrite + privacy sweep of tracked docs + decide which experiments/ files get tracked
+- [ ] **Thu PM (eval)** — design generation eval on paper (half-page spec: grader, eval record shape, how ask_log feeds it)
+- [ ] **Fri AM (app)** — private GitHub push + clone test + CI workflow (pytest + ruff on every push)
+- [ ] **Fri PM (eval)** — generation grader prototype, validated on ~10 synthetic Q&As; first look at the week's real ask_log rows
+- [ ] **Sun** — weekly check-in (template below): cut week 2 from roadmap.md; weeks 2–3 = usage period + eval deepening
+
+---
+
 ## Milestones
 
 ### M1: Solid Foundation (Week 1)
