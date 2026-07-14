@@ -6,6 +6,7 @@ from pathlib import Path
 
 from src.logger import logger
 from src.notes_service import NoteService
+from src.rag import ask
 from src.storage.storage import Storage
 from src.processing import load_model, process_voice_note
 from config import DEFAULT_CATEGORIES, CATEGORY_MIRROR_LINES
@@ -100,7 +101,7 @@ def render_entry_card(entry: dict, key_prefix: str, show_category: bool = True):
                 if st.button("✏️", key=f"{key_prefix}_{entry['id']}"):
                     edit_note_dialog(entry["id"], category or "journal", entry.get("content", ""))
 
-page = st.sidebar.radio("Navigation", ["Capture", "Search", "Recents", "Categories", "Journal", "Mirror"], label_visibility="collapsed")
+page = st.sidebar.radio("Navigation", ["Capture", "Ask", "Search", "Recents", "Categories", "Journal", "Mirror"], label_visibility="collapsed")
 
 
 def save_file(file_obj, name: str) -> str:
@@ -468,3 +469,60 @@ elif page == "Mirror":
             label = "From the past:"
         text = rediscovery.get("content") or rediscovery.get("description", "")
         st.info(f"*{label}*\n\n{text}")
+
+elif page == "Ask":
+    st.title("Ask")
+
+    typed_query = st.text_input("Ask anything about your notes", key="ask_typed")
+    voice_query = st.audio_input("Or ask with your voice", key="ask_voice")
+
+    if st.button("Ask", type="primary"):
+        query = typed_query.strip()
+
+        # Voice takes over if recorded
+        if voice_query is not None:
+            with st.spinner("Transcribing..."):
+                try:
+                    whisper_model = get_whisper_model()
+                    tmp_path = f"entries/ask_voice_{uuid.uuid4()}.wav"
+                    with open(tmp_path, "wb") as f:
+                        f.write(voice_query.getbuffer())
+                    query = process_voice_note(tmp_path, whisper_model)
+                    Path(tmp_path).unlink(missing_ok=True)
+                    st.caption(f"Heard: {query}")
+                except Exception as e:
+                    logger.warning("Voice query transcription failed: %s", e)
+                    st.warning("Couldn't transcribe voice — using typed query instead.")
+
+        if not query:
+            st.warning("Type or record a question first.")
+        else:
+            with st.spinner("Thinking..."):
+                try:
+                    result = ask(query, service.storage)
+                except Exception as e:
+                    logger.error("Ask pipeline failed: %s", e)
+                    st.error("Something went wrong — please try again.")
+                    st.stop()
+
+            if result.fallback and not result.notes:
+                st.info("I couldn't find any relevant notes for that query.")
+
+            elif result.intent == "browse":
+                if result.fallback:
+                    st.info("No notes found for those filters.")
+                else:
+                    st.caption(f"{len(result.notes)} notes found")
+                    for entry in result.notes:
+                        render_entry_card(entry, key_prefix="ask_browse")
+
+            else:
+                if result.fallback:
+                    st.warning("Couldn't find a clear match — here are the closest notes I found.")
+
+                st.markdown(result.answer)
+
+                if result.notes:
+                    with st.expander(f"Sources ({len(result.notes)} notes)"):
+                        for entry in result.notes:
+                            render_entry_card(entry, key_prefix="ask_src")
