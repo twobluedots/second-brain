@@ -748,3 +748,23 @@ DELETE FROM categories WHERE name NOT IN ('task','mood','journal','learning','re
 - ❌ Curiosity-driven detours during build sessions now get parked, which takes discipline
 
 **When to reconsider:** At a weekly check-in, if the split feels heavier than the problem it solves — simplify the rules, don't abandon the separation.
+
+---
+
+### 2026-07-14: [M4.2b] ask_log + AskService — instrumentation before usage
+
+**What I decided:**
+- New `ask_log` table records every Ask interaction: query, input_type (text/voice), intent, retrieved note ids (JSON), answer, result_count, **model provenance** (`analyzer_model`, `generator_model` — nullable; None = fallback/no LLM), **stage latencies** (`analyzer_ms`, `retrieval_ms`, `generation_ms` as INTEGER ms), nullable `error`, created_at. Failures are logged as rows with `error` filled.
+- New **`AskService`** (`src/rag/service.py`) — a *peer* of NoteService, not an extension of it: NoteService owns capture/CRUD, AskService owns question→answer. It runs the pure pipeline and owns the logging side effect. app.py now talks to it instead of reaching through `service.storage` (which violated the M1.3 rule).
+- `storage.log_ask_event()` never raises (same contract as `log_search`) — logging must not break the ask.
+- Latencies live in the table, not just log files: the purpose is analytical (SQL aggregation — e.g. the bge-large speed question), not operational debugging.
+- Test-first: the round-trip test in `tests/test_storage.py` was written before implementation and defined the API (plain kwargs — storage doesn't import RAG types).
+
+**Why instrumentation first:** every real question asked from now on becomes eval data; shakedown queries land in the dataset instead of evaporating. Same principle as M1.4 voice auto-save — make the data safe before anything else.
+
+**Trade-offs:**
+- ✅ Real-usage eval dataset builds itself during the usage period
+- ✅ Per-stage latency + per-model provenance = answerable quality/speed questions later
+- ❌ One more service class; two peer services share the Storage dependency (normal)
+
+**When to reconsider:** If a third service appears, check whether shared orchestration concerns (provider chains, logging) deserve a common helper. Parking lot: 👍/👎 rating on answers → ground truth for generation evals.
