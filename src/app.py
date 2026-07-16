@@ -6,7 +6,7 @@ from pathlib import Path
 
 from src.logger import logger
 from src.notes_service import NoteService
-from src.rag import ask
+from src.rag.service import AskService
 from src.storage.storage import Storage
 from src.processing import load_model, process_voice_note
 from config import DEFAULT_CATEGORIES, CATEGORY_MIRROR_LINES
@@ -17,6 +17,10 @@ os.makedirs("entries", exist_ok=True)
 @st.cache_resource
 def get_service() -> NoteService:
     return NoteService(Storage())
+
+@st.cache_resource
+def get_ask_service() -> AskService:
+    return AskService(get_service().storage)
 
 
 @st.cache_resource
@@ -92,14 +96,22 @@ def render_entry_card(entry: dict, key_prefix: str, show_category: bool = True):
                 st.caption(format_relative_time(entry.get("created_at", "")))
             with col3:
                 if st.button("✏️", key=f"{key_prefix}_{entry['id']}"):
-                    edit_note_dialog(entry["id"], category or "journal", entry.get("content", ""))
+                    st.session_state["_edit_target"] = {
+                        "entry_id": entry["id"],
+                        "current_category": category or "journal",
+                        "current_content": entry.get("content", ""),
+                    }
         else:
             col_time, col_edit = st.columns([8, 1])
             with col_time:
                 st.caption(format_relative_time(entry.get("created_at", "")))
             with col_edit:
                 if st.button("✏️", key=f"{key_prefix}_{entry['id']}"):
-                    edit_note_dialog(entry["id"], category or "journal", entry.get("content", ""))
+                    st.session_state["_edit_target"] = {
+                        "entry_id": entry["id"],
+                        "current_category": category or "journal",
+                        "current_content": entry.get("content", ""),
+                    }
 
 page = st.sidebar.radio("Navigation", ["Capture", "Ask", "Search", "Recents", "Categories", "Journal", "Mirror"], label_visibility="collapsed")
 
@@ -192,25 +204,42 @@ def add_text_dialog():
             st.error("Text cannot be empty.")
 
 
-@st.dialog("Edit Note")
+def _clear_edit_target():
+    st.session_state.pop("_edit_target", None)
+    st.session_state.pop("_confirm_delete", None)
+
+
+@st.dialog("Edit Note", on_dismiss=_clear_edit_target)
 def edit_note_dialog(entry_id: str, current_category: str, current_content: str):
     new_content = st.text_area("Content", value=current_content)
     cats = service.get_categories()
     idx = cats.index(current_category) if current_category in cats else 0
     new_cat = st.selectbox("Category", cats, index=idx)
     if st.button("Save", use_container_width=True, type="secondary"):
+        ask_result = st.session_state.get("ask_result")
         if new_content != current_content:
             service.update_note(entry_id, new_content)
             for e in st.session_state.get("entries", []):
                 if e.get("id") == entry_id:
                     e["content"] = new_content
                     break
+            if ask_result is not None:
+                for n in ask_result.notes:
+                    if n.get("id") == entry_id:
+                        n["content"] = new_content
+                        break
         if new_cat != current_category:
             service.override_category(entry_id, new_cat)
             for e in st.session_state.get("entries", []):
                 if e.get("id") == entry_id:
                     e["category"] = new_cat
                     break
+            if ask_result is not None:
+                for n in ask_result.notes:
+                    if n.get("id") == entry_id:
+                        n["category"] = new_cat
+                        break
+        _clear_edit_target()
         st.rerun()
 
     if st.button("Delete", use_container_width=True, type="primary"):
@@ -225,7 +254,10 @@ def edit_note_dialog(entry_id: str, current_category: str, current_content: str)
                 st.session_state["entries"] = [
                     e for e in st.session_state.get("entries", []) if e.get("id") != entry_id
                 ]
-                st.session_state.pop("_confirm_delete", None)
+                ask_result = st.session_state.get("ask_result")
+                if ask_result is not None:
+                    ask_result.notes = [n for n in ask_result.notes if n.get("id") != entry_id]
+                _clear_edit_target()
                 st.rerun()
         with col_no:
             if st.button("Cancel", use_container_width=True):
@@ -235,6 +267,9 @@ def edit_note_dialog(entry_id: str, current_category: str, current_content: str)
 
 if "entries" not in st.session_state:
     st.session_state.entries = []
+
+if st.session_state.get("_edit_target"):
+    edit_note_dialog(**st.session_state["_edit_target"])
 
 
 if page == "Capture":
@@ -264,7 +299,11 @@ if page == "Capture":
                     st.caption(f"category: {entry['category']}")
                 with col2:
                     if st.button("✏️", key=f"edit_cap_{entry.get('id', idx)}"):
-                        edit_note_dialog(entry["id"], entry["category"], entry.get("content", ""))
+                        st.session_state["_edit_target"] = {
+                            "entry_id": entry["id"],
+                            "current_category": entry["category"],
+                            "current_content": entry.get("content", ""),
+                        }
 
 elif page == "Search":
     st.title("🔍 Search")
@@ -286,6 +325,8 @@ elif page == "Search":
             key="search_content_type",
         )
 
+    # Button click stores the search *intent*; rendering below recomputes from it on
+    # every rerun, so edits/deletes are always reflected (no stale results cache).
     if st.button("Search"):
         now = datetime.now(timezone.utc)
         if date_preset == "Today":
@@ -297,17 +338,33 @@ elif page == "Search":
         else:
             date_from = None
 
-        content_type_val = None if content_type_filter == "All" else content_type_filter.lower()
+        st.session_state.search_params = {
+            "query": query,
+            "content_type": None if content_type_filter == "All" else content_type_filter.lower(),
+            "date_from": date_from,
+            "date_preset": date_preset,
+        }
+        st.session_state.search_log_pending = True  # log only the click, not every rerun
 
+    params = st.session_state.get("search_params")
+    if params:
         try:
-            results = service.search(query, content_type=content_type_val, date_from=date_from, date_preset=date_preset)
-            if results:
-                for entry in results:
-                    render_entry_card(entry, key_prefix="edit_search")
-            else:
-                st.write("No results found.")
+            results = service.search(
+                params["query"],
+                content_type=params["content_type"],
+                date_from=params["date_from"],
+                date_preset=params["date_preset"],
+                log_event=st.session_state.pop("search_log_pending", False),
+            )
         except Exception:
             st.error("Search is temporarily unavailable — try again later.")
+            results = None
+
+        if results:
+            for entry in results:
+                render_entry_card(entry, key_prefix="edit_search")
+        elif results is not None:
+            st.write("No results found.")
 
 elif page == "Recents":
     st.title("📋 Recents")
@@ -473,56 +530,74 @@ elif page == "Mirror":
 elif page == "Ask":
     st.title("Ask")
 
-    typed_query = st.text_input("Ask anything about your notes", key="ask_typed")
-    voice_query = st.audio_input("Or ask with your voice", key="ask_voice")
+    st.session_state.setdefault("ask_form_version", 0)
+    version = st.session_state.ask_form_version
+    audio_key = f"ask_voice_{version}"
+    text_key = f"ask_text_{version}"
+    transcribed_flag = f"ask_transcribed_{version}"
+
+    voice_query = st.audio_input("Or ask with your voice", key=audio_key)
+
+    # Transcribe as soon as audio shows up, once, so it lands in the editable
+    # text field below instead of silently overriding what gets asked.
+    if voice_query is not None and not st.session_state.get(transcribed_flag):
+        with st.spinner("Transcribing..."):
+            try:
+                whisper_model = get_whisper_model()
+                tmp_path = f"entries/ask_voice_{uuid.uuid4()}.wav"
+                with open(tmp_path, "wb") as f:
+                    f.write(voice_query.getbuffer())
+                transcription = process_voice_note(tmp_path, whisper_model)
+                Path(tmp_path).unlink(missing_ok=True)
+                st.session_state[text_key] = transcription or ""
+            except Exception as e:
+                logger.warning("Voice query transcription failed: %s", e)
+                st.warning("Couldn't transcribe voice — type your question instead.")
+        st.session_state[transcribed_flag] = True
+
+    query_text = st.text_input("Ask anything about your notes", key=text_key)
 
     if st.button("Ask", type="primary"):
-        query = typed_query.strip()
-
-        # Voice takes over if recorded
-        if voice_query is not None:
-            with st.spinner("Transcribing..."):
-                try:
-                    whisper_model = get_whisper_model()
-                    tmp_path = f"entries/ask_voice_{uuid.uuid4()}.wav"
-                    with open(tmp_path, "wb") as f:
-                        f.write(voice_query.getbuffer())
-                    query = process_voice_note(tmp_path, whisper_model)
-                    Path(tmp_path).unlink(missing_ok=True)
-                    st.caption(f"Heard: {query}")
-                except Exception as e:
-                    logger.warning("Voice query transcription failed: %s", e)
-                    st.warning("Couldn't transcribe voice — using typed query instead.")
+        query = query_text.strip()
 
         if not query:
             st.warning("Type or record a question first.")
         else:
+            input_type = "voice" if voice_query is not None else "text"
             with st.spinner("Thinking..."):
                 try:
-                    result = ask(query, service.storage)
+                    result = get_ask_service().ask(query, input_type=input_type)
                 except Exception as e:
                     logger.error("Ask pipeline failed: %s", e)
                     st.error("Something went wrong — please try again.")
                     st.stop()
 
-            if result.fallback and not result.notes:
-                st.info("I couldn't find any relevant notes for that query.")
+            # Stash the result so it survives the form reset below, then
+            # bump the widget version to clear the audio/text inputs.
+            st.session_state.ask_result = result
+            st.session_state.ask_form_version += 1
+            st.rerun()
 
-            elif result.intent == "browse":
-                if result.fallback:
-                    st.info("No notes found for those filters.")
-                else:
-                    st.caption(f"{len(result.notes)} notes found")
-                    for entry in result.notes:
-                        render_entry_card(entry, key_prefix="ask_browse")
+    result = st.session_state.get("ask_result")
+    if result is not None:
+        if result.fallback and not result.notes:
+            st.info("I couldn't find any relevant notes for that query.")
 
+        elif result.intent == "browse":
+            if result.fallback:
+                st.info("No notes found for those filters.")
             else:
-                if result.fallback:
-                    st.warning("Couldn't find a clear match — here are the closest notes I found.")
+                st.caption(f"{len(result.notes)} notes found")
+                for entry in result.notes:
+                    render_entry_card(entry, key_prefix="ask_browse")
 
-                st.markdown(result.answer)
+        else:
+            if result.fallback:
+                st.warning("Couldn't find a clear match — here are the closest notes I found.")
 
-                if result.notes:
-                    with st.expander(f"Sources ({len(result.notes)} notes)"):
-                        for entry in result.notes:
-                            render_entry_card(entry, key_prefix="ask_src")
+            st.markdown(result.answer)
+
+            if result.notes:
+                with st.expander(f"Sources ({len(result.notes)} notes)"):
+                    for entry in result.notes:
+                        render_entry_card(entry, key_prefix="ask_src")

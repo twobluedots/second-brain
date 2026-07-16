@@ -60,7 +60,7 @@ class NoteService:
     def get_recent(self, limit: int = 10):
         return self.storage.get_recent(limit)
 
-    def search(self, query: str, content_type: str = None, date_from: str = None, date_preset: str = None):
+    def search(self, query: str, content_type: str = None, date_from: str = None, date_preset: str = None, log_event: bool = True):
         # Two execution paths for the same intent ("give me entries matching these criteria"):
         # - text present → ChromaDB vector search, metadata filters applied as pre-filters
         # - no text → SQLite only, filters run directly (vector search on empty string is meaningless)
@@ -76,7 +76,9 @@ class NoteService:
         else:
             ct = content_type if content_type and content_type != "all" else None
             results = self.storage.get_entries(content_type=ct, date_from=date_from)
-        self.storage.log_search(query=query or None, content_type=content_type, date_preset=date_preset, result_count=len(results))
+        # log_event=False for UI re-renders — a rerun recompute is not a new search intent
+        if log_event:
+            self.storage.log_search(query=query or None, content_type=content_type, date_preset=date_preset, result_count=len(results))
         return results
 
     def get_by_date_range(self, start: str, end: str):

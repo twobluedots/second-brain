@@ -59,10 +59,12 @@ Day shape: AM block = app, PM block = eval/learning (see [workflow.md](workflow.
 - [ ] **Tue PM (vision)** — vision session → fill [roadmap.md](roadmap.md) (agenda questions inside)
 - [ ] **Wed AM (app)** — fix search edit-dialog bug (bugs.md) + any urgent shakedown findings
 - [ ] **Wed PM (eval)** — learning session: faithfulness / answer-relevance mechanics → wrap artifact
-- [ ] **Thu AM (app)** — README rewrite + privacy sweep of tracked docs + decide which experiments/ files get tracked
-- [ ] **Thu PM (eval)** — design generation eval on paper (half-page spec: grader, eval record shape, how ask_log feeds it)
-- [ ] **Fri AM (app)** — private GitHub push + clone test + CI workflow (pytest + ruff on every push)
-- [ ] **Fri PM (eval)** — generation grader prototype, validated on ~10 synthetic Q&As; first look at the week's real ask_log rows
+- [x] **Thu (learning+bug, unplanned but right)** — Streamlit execution model + full app.py trace; found & fixed search render-inside-button bug; discovered search_result cache-invalidation follow-up; scoped the UI refactor
+- [ ] **Thu close-out** — green test run → commit ask_log implementation + bug fix; bugs.md OPEN→FIXED; search store-params fix (Claude implements, review Fri warm-up)
+- [ ] **Fri AM (app)** — README rewrite + privacy sweep of tracked docs + decide which experiments/ files get tracked
+- [ ] **Fri PM (app)** — private GitHub push + clone test + CI workflow (pytest + ruff; needs test-config with small embedding model). If time: Tailscale setup (~30 min)
+- [ ] **Sun** — **vision session first** (fill roadmap.md — it feeds the check-in), then weekly check-in: cut week 2 = UI refactor (first build blocks) + generation-eval design/grader (eval blocks) + M5 deployment design + usage period starts
+- [ ] **Slides to week 2** — UI refactor bundle (multipage, src/ui/components.py, card de-dup, services factory, date_preset→service, lru_cache categorize, whisper_ms), generation grader prototype
 - [ ] **Sun** — weekly check-in (template below): cut week 2 from roadmap.md; weeks 2–3 = usage period + eval deepening
 
 ---
@@ -313,6 +315,8 @@ Day shape: AM block = app, PM block = eval/learning (see [workflow.md](workflow.
 - [ ] Spaced repetition for `learning` notes — flashcard-style recall reminders
 
 ### Technical
+- [ ] "Today" filters use UTC midnight — should be user-local timezone (Search presets, Journal day range, Mirror week math)
+- [ ] Ask-voice audio retention — currently transcribe-and-delete; revisit if ask_log shows garbled queries / re-asks during usage period (evidence-driven decision, see decisions.md 2026-07-14 area)
 - [ ] Migrate to Supabase (PostgreSQL + pgvector — replaces both SQLite and ChromaDB)
 - [ ] Deploy to Streamlit Community Cloud
 - [ ] Migrate from Streamlit to a more flexible framework
