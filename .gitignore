@@ -15,6 +15,8 @@ wheels/
 # Personal data
 data/*
 entries/*
+docs/learning/
+docs/learning.md
 
 # IDE
 .vscode/
@@ -40,6 +42,8 @@ experiments/data/voice/
 experiments/*.json
 experiments/*.txt
 experiments/data/note_analysis.json
+experiments/data/test_notes.txt
+experiments/data/dataset1/notes_default.jsonl
 experiments/data/dataset1/ragas_testset/
 
 # Root-level experiment result dumps
