@@ -6,11 +6,12 @@ Bugs discovered but not yet prioritized for fixing. Update status as things chan
 
 ---
 
-## [OPEN] Ask logging fails — missing column on ask_log table
+## [FIXED] Ask logging fails — missing column on ask_log table
 - **Where**: Ask page logging → `ask_log` table
 - **What**: `WARNING | Ask logging failed: table ask_log has no column named retrieval_fallback` — column was added to the model/code but no migration script was written to alter the existing table
-- **Fix**: Write migration script to add `retrieval_fallback` column to `ask_log`
-- **When found**: 2026-07-16
+- **When found**: 2026-07-16 · **Fixed**: 2026-07-16
+- **Cause**: `CREATE TABLE IF NOT EXISTS` never alters an existing table, and `log_ask_event` swallows its own errors by design — so inserts failed silently while the Ask page looked healthy. Only visible in app.log WARNINGs.
+- **Fix**: `scripts/migrate_ask_log_retrieval_fallback.py` (ran 2026-07-16; 3 existing rows backfilled with 0). Lesson for standards: every schema change needs a migration script *at the time of the change* — and swallow-errors logging means app.log WARNINGs are the only tripwire; check them after schema work.
 
 
 ---
