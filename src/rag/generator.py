@@ -6,6 +6,7 @@ Takes retrieved notes + query plan, returns a generated answer string.
 import os
 from typing import Dict, List, Optional
 
+from config import ANTHROPIC_MODEL, OPENAI_MODEL
 from src.logger import logger
 from src.rag.analyzer import QueryPlan
 
@@ -64,7 +65,7 @@ def _plain_fallback(notes: List[Dict]) -> str:
 def _with_openai(prompt: str) -> str:
     from openai import OpenAI
     response = OpenAI().chat.completions.create(
-        model="gpt-4o-mini",
+        model=OPENAI_MODEL,
         messages=[
             {"role": "system", "content": _SYSTEM},
             {"role": "user", "content": prompt},
@@ -78,7 +79,7 @@ def _with_openai(prompt: str) -> str:
 def _with_anthropic(prompt: str) -> str:
     from anthropic import Anthropic
     response = Anthropic().messages.create(
-        model="claude-haiku-4-5-20251001",
+        model=ANTHROPIC_MODEL,
         max_tokens=300,
         system=_SYSTEM,
         messages=[{"role": "user", "content": prompt}],
@@ -86,13 +87,14 @@ def _with_anthropic(prompt: str) -> str:
     return response.content[0].text.strip()
 
 
-def generate(query: str, plan: QueryPlan, notes: List[Dict]) -> str:
+def generate(query: str, plan: QueryPlan, notes: List[Dict]) -> tuple[str, Optional[str]]:
     """
     Generate an answer from retrieved notes.
-    Returns a plain string — the UI handles fallback disclaimers separately.
+    Returns (answer, model) — model is None when no LLM produced the answer
+    (empty retrieval or plain fallback). The UI handles fallback disclaimers separately.
     """
     if not notes:
-        return "I couldn't find any relevant notes for that query."
+        return "I couldn't find any relevant notes for that query.", None
 
     prompt = _build_prompt(query, plan, notes)
 
@@ -100,7 +102,7 @@ def generate(query: str, plan: QueryPlan, notes: List[Dict]) -> str:
         try:
             answer = _with_openai(prompt)
             logger.info("Answer generated via OpenAI (intent=%s, notes=%d)", plan.intent, len(notes))
-            return answer
+            return answer, f"openai:{OPENAI_MODEL}"
         except Exception as e:
             logger.warning("OpenAI generation failed: %s", e)
 
@@ -108,9 +110,9 @@ def generate(query: str, plan: QueryPlan, notes: List[Dict]) -> str:
         try:
             answer = _with_anthropic(prompt)
             logger.info("Answer generated via Anthropic (intent=%s, notes=%d)", plan.intent, len(notes))
-            return answer
+            return answer, f"anthropic:{ANTHROPIC_MODEL}"
         except Exception as e:
             logger.warning("Anthropic generation failed: %s", e)
 
     logger.warning("All generation providers failed, returning plain note list")
-    return _plain_fallback(notes)
+    return _plain_fallback(notes), None

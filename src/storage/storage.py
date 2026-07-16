@@ -138,6 +138,24 @@ class Storage:
                     created_at TEXT NOT NULL
                 );
 
+                CREATE TABLE IF NOT EXISTS ask_log (
+                    id TEXT PRIMARY KEY,
+                    query TEXT NOT NULL,
+                    input_type TEXT,
+                    intent TEXT,
+                    retrieved_note_ids TEXT,
+                    answer TEXT,
+                    result_count INTEGER,
+                    analyzer_model TEXT,
+                    generator_model TEXT,
+                    analyzer_ms INTEGER,
+                    retrieval_ms INTEGER,
+                    generation_ms INTEGER,
+                    retrieval_fallback INTEGER NOT NULL DEFAULT 0,
+                    error TEXT,
+                    created_at TEXT NOT NULL
+                );
+
                 CREATE INDEX IF NOT EXISTS idx_entries_created_at ON entries(created_at);
                 CREATE INDEX IF NOT EXISTS idx_entries_deleted_at ON entries(deleted_at);
                 CREATE INDEX IF NOT EXISTS idx_entries_category ON entries(category);
@@ -274,14 +292,17 @@ class Storage:
         Soft delete: mark entry as deleted in both stores.
         """
         now = self._iso_now()
-        
+
         # Mark as deleted in SQLite
         with self._connect() as conn:
-            conn.execute(
+            cursor = conn.execute(
                 "UPDATE entries SET deleted_at = ? WHERE id = ?",
                 (now, entry_id)
             )
-        logger.info("Deleted entry %s", entry_id)
+        if cursor.rowcount == 0:
+            logger.warning("Delete called for unknown entry %s — no row matched", entry_id)
+        else:
+            logger.info("Deleted entry %s", entry_id)
 
         # Remove from ChromaDB
         try:
@@ -442,6 +463,40 @@ class Storage:
                 )
         except Exception as e:
             logger.warning("Search logging failed: %s", e)
+
+    def log_ask_event(
+        self,
+        query: str,
+        input_type: str,
+        intent: Optional[str],
+        retrieved_note_ids: List[str],
+        answer: Optional[str],
+        result_count: int,
+        analyzer_model: Optional[str] = None,
+        generator_model: Optional[str] = None,
+        analyzer_ms: Optional[int] = None,
+        retrieval_ms: Optional[int] = None,
+        generation_ms: Optional[int] = None,
+        retrieval_fallback: bool = False,
+        error: Optional[str] = None,
+    ) -> None:
+        """Log one Ask interaction (success or failure). Never raises — logging
+        must not break the ask flow (same contract as log_search)."""
+        try:
+            with self._connect() as conn:
+                conn.execute(
+                    """INSERT INTO ask_log
+                       (id, query, input_type, intent, retrieved_note_ids, answer, result_count,
+                        analyzer_model, generator_model, analyzer_ms, retrieval_ms, generation_ms,
+                        retrieval_fallback, error, created_at)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (str(uuid.uuid4()), query, input_type, intent,
+                     json.dumps(retrieved_note_ids or []), answer, result_count,
+                     analyzer_model, generator_model, analyzer_ms, retrieval_ms, generation_ms,
+                     int(retrieval_fallback), error, self._iso_now())
+                )
+        except Exception as e:
+            logger.warning("Ask logging failed: %s", e)
 
     def search(self, query: str, limit: int = DEFAULT_SEARCH_LIMIT, where: Optional[Dict] = None) -> List[Dict]:
         """

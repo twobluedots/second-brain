@@ -8,7 +8,7 @@ import os
 from dataclasses import dataclass
 from typing import Optional
 
-from config import DEFAULT_CATEGORIES
+from config import ANTHROPIC_MODEL, DEFAULT_CATEGORIES, OPENAI_MODEL
 from src.logger import logger
 
 
@@ -19,6 +19,7 @@ class QueryPlan:
     category_filter: Optional[str]  # None | one of DEFAULT_CATEGORIES
     content_type: Optional[str]     # None | "voice" | "image" | "text"
     k: int                          # notes to retrieve (0 = unused for browse)
+    model: Optional[str] = None     # which LLM produced this plan; None = default fallback
 
 
 _DEFAULT_PLAN = QueryPlan(intent="qa", time_filter=None, category_filter=None, content_type=None, k=8)
@@ -78,7 +79,7 @@ def _parse(raw: str) -> Optional[QueryPlan]:
 def _with_openai(query: str) -> Optional[QueryPlan]:
     from openai import OpenAI
     response = OpenAI().chat.completions.create(
-        model="gpt-4o-mini",
+        model=OPENAI_MODEL,
         messages=[
             {"role": "system", "content": _SYSTEM},
             {"role": "user", "content": _PROMPT.format(query=query)},
@@ -93,7 +94,7 @@ def _with_openai(query: str) -> Optional[QueryPlan]:
 def _with_anthropic(query: str) -> Optional[QueryPlan]:
     from anthropic import Anthropic
     response = Anthropic().messages.create(
-        model="claude-haiku-4-5-20251001",
+        model=ANTHROPIC_MODEL,
         max_tokens=100,
         system=_SYSTEM,
         messages=[{"role": "user", "content": _PROMPT.format(query=query)}],
@@ -110,6 +111,7 @@ def analyze_query(query: str) -> QueryPlan:
         try:
             plan = _with_openai(query)
             if plan:
+                plan.model = f"openai:{OPENAI_MODEL}"
                 logger.info("Query analyzed via OpenAI: intent=%s k=%d", plan.intent, plan.k)
                 return plan
         except Exception as e:
@@ -119,6 +121,7 @@ def analyze_query(query: str) -> QueryPlan:
         try:
             plan = _with_anthropic(query)
             if plan:
+                plan.model = f"anthropic:{ANTHROPIC_MODEL}"
                 logger.info("Query analyzed via Anthropic: intent=%s k=%d", plan.intent, plan.k)
                 return plan
         except Exception as e:

@@ -49,6 +49,10 @@ CATEGORY_MIRROR_LINES = {
 # Local model for Ollama fallback (change to whichever you have pulled)
 OLLAMA_MODEL = "llama3.2"
 
+# LLM provider chain models (RAG analyzer + generator; provenance strings derive from these)
+OPENAI_MODEL = "gpt-4o-mini"
+ANTHROPIC_MODEL = "claude-haiku-4-5-20251001"
+
 # Embedding model for ChromaDB semantic search
 EMBEDDING_MODEL = "BAAI/bge-large-en-v1.5"
 BGE_QUERY_INSTRUCTION = "Represent this sentence for searching relevant passages: "
