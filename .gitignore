@@ -15,6 +15,7 @@ wheels/
 # Personal data
 data/*
 entries/*
+docs/archive/
 docs/learning/
 docs/learning.md
 
