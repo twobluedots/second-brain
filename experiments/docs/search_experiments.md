@@ -2,7 +2,7 @@
 
 ## Overview
 
-Two experiments on dataset1 — 36 notes, 158 eval queries.
+Two experiments on dataset1 — 36 notes. Eval set cleaned 2026-07-22: 162 → 156 queries (6 removed, 7 tagged ambiguous).
 
 | Run | Model | Rank@1 | Not Found | Avg Precision |
 |---|---|---|---|---|
@@ -43,17 +43,19 @@ These are problems in the eval set itself, not the model. Fix before any further
 
 The eval framework assumes one correct note per query. These queries have at least two valid answers in the dataset. Every miss here is partly an eval design flaw, not a model failure.
 
-| Query | Expected | Also valid |
-|---|---|---|
-| `small win I want to remember` | t_journal_008 | v_journal_003 |
-| `why am I building this tool for myself` | t_insight_003 | v_insight_006 |
-| `good conversation` | t_journal_008 | t_journal_004 |
-| `low energy day` | v_mood_002 | t_mood_001 |
-| `task I was avoiding` | t_journal_008 | t_journal_005 |
-| `struggle with project alignment` | t_journal_003 | t_journal_007 |
-| `reality gap in personal progress` | t_journal_007 | t_journal_003 |
+| Query | Expected note |
+|---|---|
+| `small win I want to remember` | t_journal_008 |
+| `why am I building this tool for myself` | t_insight_003 |
+| `good conversation` | t_journal_008 |
+| `low energy day` | v_mood_002 |
+| `task I was avoiding` | t_journal_008 |
+| `struggle with project alignment` | t_journal_003 |
+| `reality gap in personal progress` | t_journal_007 |
 
-**Fix:** Add `"ambiguous": true` to these entries in eval_set.jsonl and score them with relaxed grading — any top-3 hit passes.
+**Applied (2026-07-22):** Tagged with `"ambiguous": true` in eval_set.jsonl. No `also_valid` lists — maintaining them by hand doesn't scale.
+
+**Grading strategy:** Excluded from exact metrics (Rank@1, MRR, NDCG). Scored separately via **LLM-as-judge**: "is this retrieved note relevant to this query?" — reference-free relevance scoring, no hardcoded expected note needed. Implementation goes in grader.py (Area 2).
 
 ---
 
@@ -119,24 +121,30 @@ These queries need intent detection: is the user retrieving a specific note, or 
 
 ## Next Experiment Steps
 
-**Step 1 — Clean the dataset** (do before any further model comparison)
-- Remove or fix the 3 confirmed wrong mappings (devops/pipeline queries, charger query)
-- Add `"ambiguous": true` to the 7 identified ambiguous queries
-- Update grader.py to use relaxed scoring for ambiguous entries (top-3 hit = pass)
-- Estimated impact: 5-8 queries move from "failure" to "pass" — makes all future comparisons more honest
+**~~Step 1 — Clean the dataset~~** ✅ Done 2026-07-22
+- Removed 6 queries (2 wrong-topic, 1 no-matching-note, 3 duplicates)
+- Fixed 2 entries (charger expected note, "friday" removed from anxious query)
+- Tagged 7 ambiguous queries with `"ambiguous": true`
+- 162 → 156 queries
 
-**Step 2 — bge-large with query_instruction prefix**
+**Step 2 — Grader improvements** (do before re-running experiments)
+- Rename `precision` → `mrr` (it was always MRR, not precision@k)
+- Add NDCG@k — gives partial credit for rank 2/3, handles the cleaned dataset properly
+- Add ambiguous scoring path: exclude from exact metrics, run LLM-as-judge for relevance
+- Re-run both existing models against the cleaned dataset to get honest baseline numbers
+
+**Step 3 — bge-large with query_instruction prefix**
 - One-line change in config.py: add `query_instruction="Represent this sentence for searching relevant passages: "`
 - Re-run against the cleaned dataset
 - Expected: 2-5% precision gain; also tells us if the prefix matters for this dataset
 
-**Step 3 — Cross-encoder reranking**
+**Step 4 — Cross-encoder reranking**
 - Add `cross-encoder/ms-marco-MiniLM-L-6-v2` as a reranker on top of bge-large
 - Retrieve top 20 with bi-encoder, rerank, return top 5
 - Target: the remaining polarity/opposition failures and the abstract query regressions
 - Estimated impact: biggest structural improvement available without changing the dataset
 
-**Step 4 — Metadata pre-filter experiment**
+**Step 5 — Metadata pre-filter experiment**
 - Add category and content_type as ChromaDB where-clause filters
 - Test: does filtering to `mood` + `journal` notes before search improve precision for emotional queries?
 - This is also production groundwork for the metadata-aware search feature in the app

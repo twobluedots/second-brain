@@ -1,0 +1,156 @@
+{"note_id": "v_insight_001", "query": "why zero friction matters adhd", "expected_note_id": "v_insight_001"}
+{"note_id": "v_insight_001", "query": "frustration with note app freeze", "expected_note_id": "v_insight_001"}
+{"note_id": "v_insight_002", "query": "cognitive load from saved things i never come back to", "expected_note_id": "v_insight_002"}
+{"note_id": "v_insight_002", "query": "why do i avoid my own system", "expected_note_id": "v_insight_002"}
+{"note_id": "v_insight_003", "query": "What music levels stimulate focus?", "expected_note_id": "v_insight_003"}
+{"note_id": "v_insight_003", "query": "Why silence hinders focus", "expected_note_id": "v_insight_003"}
+{"note_id": "v_insight_004", "query": "does bilingualism improve comprehension", "expected_note_id": "v_insight_004"}
+{"note_id": "v_insight_005", "query": "why do I always abandon projects at 70% done", "expected_note_id": "v_insight_005"}
+{"note_id": "v_insight_005", "query": "pattern of finishing large projects but struggling with completions", "expected_note_id": "v_insight_005"}
+{"note_id": "v_insight_007", "query": "breaking out of mental paralysis", "expected_note_id": "v_insight_007"}
+{"note_id": "v_insight_007", "query": "the power of taking small actions before planning", "expected_note_id": "v_insight_007"}
+{"note_id": "v_ref_001", "query": "where did i put charger", "expected_note_id": "v_ref_001"}
+{"note_id": "v_ref_001", "query": "location of charger at home", "expected_note_id": "v_ref_001"}
+{"note_id": "v_ref_002", "query": "what do i need to buy toothpaste", "expected_note_id": "v_ref_002"}
+{"note_id": "v_ref_002", "query": "shopping reminder next week", "expected_note_id": "v_ref_002"}
+{"note_id": "v_ref_004", "query": "Interview on Friday", "expected_note_id": "v_ref_004"}
+{"note_id": "v_ref_004", "query": "What time is a typical interview", "expected_note_id": "v_ref_004"}
+{"note_id": "v_journal_001", "query": "how did I feel at the end of today", "expected_note_id": "v_journal_001"}
+{"note_id": "v_journal_002", "query": "frustration about meeting", "expected_note_id": "v_journal_002"}
+{"note_id": "v_journal_002", "query": "venting note from mid-day", "expected_note_id": "v_journal_002"}
+{"note_id": "v_journal_003", "query": "small win after frustrating task", "expected_note_id": "v_journal_003"}
+{"note_id": "v_journal_003", "query": "feeling accomplished after difficult project", "expected_note_id": "v_journal_003"}
+{"note_id": "v_mood_001", "query": "anxiety note", "expected_note_id": "v_mood_001"}
+{"note_id": "v_mood_001", "query": "when i was anxious about a meeting at work", "expected_note_id": "v_mood_001"}
+{"note_id": "v_mood_002", "query": "low energy day", "expected_note_id": "v_mood_002", "ambiguous": true}
+{"note_id": "v_mood_002", "query": "feeling flat for no reason", "expected_note_id": "v_mood_002"}
+{"note_id": "v_mood_002", "query": "why no motivation", "expected_note_id": "v_mood_002"}
+{"note_id": "t_journal_001", "query": "day off turned into procrastination", "expected_note_id": "t_journal_001"}
+{"note_id": "t_journal_001", "query": "overwhelm on sunday", "expected_note_id": "t_journal_001"}
+{"note_id": "t_journal_002", "query": "good productive day", "expected_note_id": "t_journal_002"}
+{"note_id": "t_journal_002", "query": "flow state day", "expected_note_id": "t_journal_002"}
+{"note_id": "t_journal_003", "query": "feeling underused at work", "expected_note_id": "t_journal_003"}
+{"note_id": "t_journal_003", "query": "pointless job", "expected_note_id": "t_journal_003"}
+{"note_id": "t_journal_004", "query": "processing a conversation with partner", "expected_note_id": "t_journal_004"}
+{"note_id": "t_journal_004", "query": "hard talk note", "expected_note_id": "t_journal_004"}
+{"note_id": "t_journal_005", "query": "task paralysis", "expected_note_id": "t_journal_005"}
+{"note_id": "t_journal_005", "query": "stuck can't start anything", "expected_note_id": "t_journal_005"}
+{"note_id": "t_journal_005", "query": "why do i always know what to build but then just stare at the code", "expected_note_id": "t_journal_005"}
+{"note_id": "t_journal_006", "query": "what I did and didn't do this week", "expected_note_id": "t_journal_006"}
+{"note_id": "t_journal_006", "query": "end of week review for app development project", "expected_note_id": "t_journal_006"}
+{"note_id": "t_journal_007", "query": "feeling behind on personal goals", "expected_note_id": "t_journal_007"}
+{"note_id": "t_journal_007", "query": "why am i not achieving my plans", "expected_note_id": "t_journal_007"}
+{"note_id": "t_journal_008", "query": "small win I want to remember", "expected_note_id": "t_journal_008", "ambiguous": true}
+{"note_id": "t_journal_008", "query": "finished testing today", "expected_note_id": "t_journal_008"}
+{"note_id": "t_journal_010", "query": "feeling behind everyone else", "expected_note_id": "t_journal_010"}
+{"note_id": "t_journal_010", "query": "compared to others in my field", "expected_note_id": "t_journal_010"}
+{"note_id": "t_ref_001", "query": "difference between quinoa and buckwheat", "expected_note_id": "t_ref_001"}
+{"note_id": "t_ref_001", "query": "nutrition fact about pseudocereals", "expected_note_id": "t_ref_001"}
+{"note_id": "t_ref_002", "query": "cognitive defusion act", "expected_note_id": "t_ref_002"}
+{"note_id": "t_ref_002", "query": "therapy concept to learn about", "expected_note_id": "t_ref_002"}
+{"note_id": "t_ref_002", "query": "defusing thoughts", "expected_note_id": "t_ref_002"}
+{"note_id": "v_ref_001", "query": "where did I put my charger", "expected_note_id": "v_ref_001"}
+{"note_id": "t_ref_004", "query": "sleep recovery", "expected_note_id": "t_ref_004"}
+{"note_id": "t_ref_004", "query": "herbal tea for insomnia", "expected_note_id": "t_ref_004"}
+{"note_id": "t_insight_001", "query": "should I let go of", "expected_note_id": "t_insight_001"}
+{"note_id": "t_insight_001", "query": "rule my anxious mind keeps pushing", "expected_note_id": "t_insight_001"}
+{"note_id": "t_insight_002", "query": "pattern I notice in communication", "expected_note_id": "t_insight_002"}
+{"note_id": "t_insight_002", "query": "relationship habits I want to change", "expected_note_id": "t_insight_002"}
+{"note_id": "t_insight_003", "query": "project inspiration from personal struggle", "expected_note_id": "t_insight_003"}
+{"note_id": "t_insight_003", "query": "why am i building this tool for myself", "expected_note_id": "t_insight_003", "ambiguous": true}
+{"note_id": "t_mood_001", "query": "mood check-in mid-day", "expected_note_id": "t_mood_001"}
+{"note_id": "t_mood_001", "query": "how I was feeling on wednesday", "expected_note_id": "t_mood_001"}
+{"note_id": "v_insight_001", "query": "importance of frictionless note capture for ADHD brains", "expected_note_id": "v_insight_001"}
+{"note_id": "v_insight_001", "query": "why delay in capturing thoughts is problematic for ADHD", "expected_note_id": "v_insight_001"}
+{"note_id": "v_insight_002", "query": "cognitive load from unused saved tabs", "expected_note_id": "v_insight_002"}
+{"note_id": "v_insight_002", "query": "avoiding own system due to pileup of tasks", "expected_note_id": "v_insight_002"}
+{"note_id": "v_insight_003", "query": "do I work better with noise or silence", "expected_note_id": "v_insight_003"}
+{"note_id": "v_insight_003", "query": "why can't I focus in complete silence", "expected_note_id": "v_insight_003"}
+{"note_id": "v_insight_003", "query": "workspace preference", "expected_note_id": "v_insight_003"}
+{"note_id": "v_insight_004", "query": "how do I learn best", "expected_note_id": "v_insight_004"}
+{"note_id": "v_insight_004", "query": "benefits of talking out loud while learning", "expected_note_id": "v_insight_004"}
+{"note_id": "v_insight_005", "query": "why can't I finish projects", "expected_note_id": "v_insight_005"}
+{"note_id": "v_insight_005", "query": "pattern of abandoning projects in final stages", "expected_note_id": "v_insight_005"}
+{"note_id": "v_insight_006", "query": "why am I building this app", "expected_note_id": "v_insight_006"}
+{"note_id": "v_insight_006", "query": "the need for externalizing my brain with the project", "expected_note_id": "v_insight_006"}
+{"note_id": "v_insight_007", "query": "break out of paralysis", "expected_note_id": "v_insight_007"}
+{"note_id": "v_insight_007", "query": "action over planning", "expected_note_id": "v_insight_007"}
+{"note_id": "v_ref_001", "query": "location of charger at home", "expected_note_id": "v_ref_001"}
+{"note_id": "v_ref_001", "query": "where I put the charger", "expected_note_id": "v_ref_001"}
+{"note_id": "v_ref_002", "query": "milk grocery", "expected_note_id": "v_ref_002"}
+{"note_id": "v_ref_002", "query": "eggs grocery", "expected_note_id": "v_ref_002"}
+{"note_id": "v_ref_002", "query": "shopping list for tomorrow", "expected_note_id": "v_ref_002"}
+{"note_id": "v_ref_002", "query": "breakfast ingredients needed", "expected_note_id": "v_ref_002"}
+{"note_id": "v_ref_003", "query": "how to use air fryer", "expected_note_id": "v_ref_003"}
+{"note_id": "v_ref_003", "query": "air fryer instructions", "expected_note_id": "v_ref_003"}
+{"note_id": "v_ref_004", "query": "important meeting with Alex tomorrow", "expected_note_id": "v_ref_004"}
+{"note_id": "v_ref_004", "query": "3pm meeting prep and reschedule", "expected_note_id": "v_ref_004"}
+{"note_id": "v_ref_004", "query": "Alex meeting and proposal", "expected_note_id": "v_ref_004"}
+{"note_id": "v_ref_004", "query": "Lunch packing for tomorrow", "expected_note_id": "v_ref_004"}
+{"note_id": "v_journal_001", "query": "how I felt at the end of [today's date]", "expected_note_id": "v_journal_001"}
+{"note_id": "v_journal_001", "query": "day reflection voice note", "expected_note_id": "v_journal_001"}
+{"note_id": "v_journal_001", "query": "team meeting issue today", "expected_note_id": "v_journal_001"}
+{"note_id": "v_journal_001", "query": "language barrier problem with John", "expected_note_id": "v_journal_001"}
+{"note_id": "v_journal_001", "query": "coffee spill incident", "expected_note_id": "v_journal_001"}
+{"note_id": "v_journal_001", "query": "intention for tomorrow", "expected_note_id": "v_journal_001"}
+{"note_id": "v_journal_002", "query": "frustration about meeting with John", "expected_note_id": "v_journal_002"}
+{"note_id": "v_journal_002", "query": "venting note from midday", "expected_note_id": "v_journal_002"}
+{"note_id": "v_journal_002", "query": "annoyance over task taking longer than expected", "expected_note_id": "v_journal_002"}
+{"note_id": "v_journal_002", "query": "realization about better time management", "expected_note_id": "v_journal_002"}
+{"note_id": "v_journal_002", "query": "lesson learned about organization", "expected_note_id": "v_journal_002"}
+{"note_id": "v_journal_003", "query": "small win feeling good", "expected_note_id": "v_journal_003"}
+{"note_id": "v_journal_003", "query": "remember when I accomplished something and felt good", "expected_note_id": "v_journal_003"}
+{"note_id": "v_mood_001", "query": "anxiety about call with Alex", "expected_note_id": "v_mood_001"}
+{"note_id": "v_mood_001", "query": "note on anxiety before conversation", "expected_note_id": "v_mood_001"}
+{"note_id": "v_mood_002", "query": "feeling low but not sad", "expected_note_id": "v_mood_002"}
+{"note_id": "v_mood_002", "query": "no reason for feeling flat", "expected_note_id": "v_mood_002"}
+{"note_id": "v_learning_001", "query": "knowledge graph structure optimization using tree", "expected_note_id": "v_learning_001"}
+{"note_id": "v_learning_001", "query": "tree-based data retrieval technique", "expected_note_id": "v_learning_001"}
+{"note_id": "v_learning_001", "query": "O'Reilly Chapter 12: Knowledge graph optimization", "expected_note_id": "v_learning_001"}
+{"note_id": "v_learning_002", "query": "experiment result", "expected_note_id": "v_learning_002"}
+{"note_id": "v_learning_002", "query": "new morning routine outcome", "expected_note_id": "v_learning_002"}
+{"note_id": "v_learning_002", "query": "trial with early wake-up schedule", "expected_note_id": "v_learning_002"}
+{"note_id": "v_learning_002", "query": "productivity vs sleep quality", "expected_note_id": "v_learning_002"}
+{"note_id": "t_journal_001", "query": "wasted a day off", "expected_note_id": "t_journal_001"}
+{"note_id": "t_journal_001", "query": "unable to decide what to do on Sunday", "expected_note_id": "t_journal_001"}
+{"note_id": "t_journal_001", "query": "overwhelm with options on day off", "expected_note_id": "t_journal_001"}
+{"note_id": "t_journal_002", "query": "good productivity day", "expected_note_id": "t_journal_002"}
+{"note_id": "t_journal_002", "query": "flow state experience", "expected_note_id": "t_journal_002"}
+{"note_id": "t_journal_003", "query": "feeling frustrated at work", "expected_note_id": "t_journal_003"}
+{"note_id": "t_journal_003", "query": "not feeling valued at work", "expected_note_id": "t_journal_003"}
+{"note_id": "t_journal_003", "query": "struggle with project alignment", "expected_note_id": "t_journal_003", "ambiguous": true}
+{"note_id": "t_journal_004", "query": "processing conversation with [person]", "expected_note_id": "t_journal_004"}
+{"note_id": "t_journal_004", "query": "tough talk note", "expected_note_id": "t_journal_004"}
+{"note_id": "t_journal_004", "query": "reflection on hard convo", "expected_note_id": "t_journal_004"}
+{"note_id": "t_journal_005", "query": "task paralysis", "expected_note_id": "t_journal_005"}
+{"note_id": "t_journal_005", "query": "can't start anything", "expected_note_id": "t_journal_005"}
+{"note_id": "t_journal_005", "query": "fix that bug app note", "expected_note_id": "t_journal_005"}
+{"note_id": "t_journal_006", "query": "project X problems", "expected_note_id": "t_journal_006"}
+{"note_id": "t_journal_006", "query": "beta version of Personal Knowledge App", "expected_note_id": "t_journal_006"}
+{"note_id": "t_journal_006", "query": "next week plan: focus on project X", "expected_note_id": "t_journal_006"}
+{"note_id": "t_journal_007", "query": "feeling behind on project goals", "expected_note_id": "t_journal_007"}
+{"note_id": "t_journal_007", "query": "reality gap in personal progress", "expected_note_id": "t_journal_007", "ambiguous": true}
+{"note_id": "t_journal_007", "query": "struggling with managing promises", "expected_note_id": "t_journal_007"}
+{"note_id": "t_journal_008", "query": "small win", "expected_note_id": "t_journal_008"}
+{"note_id": "t_journal_008", "query": "bug fix completed", "expected_note_id": "t_journal_008"}
+{"note_id": "t_journal_008", "query": "good conversation", "expected_note_id": "t_journal_008", "ambiguous": true}
+{"note_id": "t_journal_008", "query": "task I was avoiding", "expected_note_id": "t_journal_008", "ambiguous": true}
+{"note_id": "t_journal_010", "query": "feeling behind others", "expected_note_id": "t_journal_010"}
+{"note_id": "t_journal_010", "query": "compare trap in work life", "expected_note_id": "t_journal_010"}
+{"note_id": "t_ref_001", "query": "difference between olive oil and coconut oil", "expected_note_id": "t_ref_001"}
+{"note_id": "t_ref_001", "query": "use of olive oil vs coconut oil", "expected_note_id": "t_ref_001"}
+{"note_id": "t_ref_002", "query": "What is ACT therapy?", "expected_note_id": "t_ref_002"}
+{"note_id": "t_ref_002", "query": "Psychological method I read about recently", "expected_note_id": "t_ref_002"}
+{"note_id": "t_ref_003", "query": "Where is my keys and wallet?", "expected_note_id": "t_ref_003"}
+{"note_id": "t_ref_003", "query": "Kitchen drawer right location", "expected_note_id": "t_ref_003"}
+{"note_id": "t_ref_004", "query": "what helps with poor sleep", "expected_note_id": "t_ref_004"}
+{"note_id": "t_ref_004", "query": "recovery tips for bad sleep", "expected_note_id": "t_ref_004"}
+{"note_id": "t_insight_001", "query": "anxious mind rule", "expected_note_id": "t_insight_001"}
+{"note_id": "t_insight_001", "query": "chasing perfection in coding", "expected_note_id": "t_insight_001"}
+{"note_id": "t_insight_001", "query": "perfect code vs progress", "expected_note_id": "t_insight_001"}
+{"note_id": "t_insight_002", "query": "defensive behavior in relationships", "expected_note_id": "t_insight_002"}
+{"note_id": "t_insight_002", "query": "improve active listening skills", "expected_note_id": "t_insight_002"}
+{"note_id": "t_insight_003", "query": "project mirrors personal life", "expected_note_id": "t_insight_003"}
+{"note_id": "t_insight_003", "query": "why app designed for adhd is personal", "expected_note_id": "t_insight_003"}
+{"note_id": "t_mood_001", "query": "mood check-in at noon", "expected_note_id": "t_mood_001"}
+{"note_id": "t_mood_001", "query": "How I felt around 12 pm", "expected_note_id": "t_mood_001"}

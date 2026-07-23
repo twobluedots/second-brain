@@ -1,0 +1,661 @@
+# Dataset 1 — Realistic templates
+# Mirrors actual note patterns from the DB analysis.
+# Each template = one generated note + 2 queries.
+#
+# style_notes key:
+#   voice: stream of consciousness, run-on sentences, filler words (you know / kind of / like),
+#          no clean punctuation, ends abruptly or with a small summary
+#   text:  can be fragments, very direct, sometimes Turkish, no need for full sentences
+#
+# query_hints: natural language you'd actually type into the search box months later
+
+# ─────────────────────────────────────────
+# VOICE NOTES (20)
+# ─────────────────────────────────────────
+
+voice_insight:
+
+  - id: v_insight_001
+    type: voice
+    category: insight
+    language: en
+    word_range: [80, 140]
+    scenario: >
+      You were using the app and something small frustrated you — maybe it took too many
+      taps or you lost a note. It triggered a realization about why zero-friction capture
+      matters specifically for ADHD brains. You recorded this while still feeling the frustration.
+    style_notes: >
+      Starts mid-thought, includes the frustrating moment as the hook, then the realization.
+      Personal, slightly emotional. "this is exactly why..." type language.
+    query_hints:
+      - "why does friction matter for capturing notes"
+      - "realization about the app when something broke"
+
+  - id: v_insight_002
+    type: voice
+    category: insight
+    language: en
+    word_range: [60, 110]
+    scenario: >
+      You noticed a pattern: you keep saving things "for later" — tabs, tasks, ideas —
+      and they pile up and create cognitive load. The pile makes you avoid the whole system.
+      You just noticed this cycle happening again right now.
+    style_notes: >
+      Short, self-observing. Feels like talking to yourself. No conclusion needed — just
+      noting the pattern. A few self-interruptions ("wait, actually...").
+    query_hints:
+      - "cognitive load from saved things I never come back to"
+      - "why I avoid my own system"
+
+  - id: v_insight_003
+    type: voice
+    category: insight
+    language: en
+    word_range: [70, 120]
+    scenario: >
+      You realized you work better with ambient noise — a cafe, background music —
+      but only up to a certain level. Total silence is actually harder. You're recording
+      this because you keep forgetting this about yourself and booking silent library slots.
+    style_notes: >
+      Slightly amused tone at forgetting this again. Practical. Ends with a loose decision
+      or reminder to yourself.
+    query_hints:
+      - "do I work better with noise or silence"
+      - "why I can't focus in complete silence"
+
+  - id: v_insight_004
+    type: voice
+    category: insight
+    language: en
+    word_range: [90, 150]
+    scenario: >
+      You noticed that when you start explaining something out loud — to yourself or someone
+      else — you understand it much better than when you just read it. You've been trying to
+      figure out your learning style and this felt like a concrete data point.
+    style_notes: >
+      Curious and slightly excited. Voice note style — thinks out loud, backtracks once.
+      References a specific recent example (a concept you explained to someone).
+    query_hints:
+      - "how do I learn best"
+      - "talking out loud helps me understand things"
+
+  - id: v_insight_005
+    type: voice
+    category: insight
+    language: en
+    word_range: [80, 130]
+    scenario: >
+      You keep abandoning projects at around 70% done. Never the last push to finish.
+      You just realized this is the same pattern as school — you'd do all the interesting
+      parts and then stall on the final submission. You're recording the insight, not a solution.
+    style_notes: >
+      A bit self-critical but not harsh. Acknowledges the pattern without catastrophizing.
+      Ends open — no resolution, just observation.
+    query_hints:
+      - "why do I never finish projects"
+      - "pattern of abandoning things near the end"
+
+  - id: v_insight_006
+    type: voice
+    category: insight
+    language: en
+    word_range: [100, 160]
+    scenario: >
+      You realized that what you're building in this app is actually something you needed
+      years ago — a way to externalize your brain so you don't have to hold everything in
+      your head. The recording came from a sudden emotional clarity about the project's purpose.
+    style_notes: >
+      More reflective and a bit vulnerable. Slower pace, longer sentences. Connects the
+      project to something personal about how you experience your own mind.
+    query_hints:
+      - "why I'm building this app"
+      - "externalizing my brain the point of the project"
+
+  - id: v_insight_007
+    type: voice
+    category: insight
+    language: en
+    word_range: [60, 100]
+    scenario: >
+      You noticed that doing something small — even a 10 minute task — breaks the paralysis
+      better than planning. Specifically you just experienced this: you were stuck, did one
+      tiny thing, and then could continue. You're recording it while the feeling is fresh.
+    style_notes: >
+      Short, energized. Feels like you're recording right after the thing happened.
+      A bit triumphant. Practical.
+    query_hints:
+      - "how to break out of paralysis"
+      - "doing instead of planning"
+
+voice_reference:
+
+  - id: v_ref_001
+    type: voice
+    category: reference
+    language: en
+    word_range: [30, 60]
+    scenario: >
+      You just put something important in an unusual place at home — a document, charger,
+      or item you rarely use but will definitely need later. Recording where it is while
+      still standing in front of it.
+    style_notes: >
+      Very short, practical, slightly breathless. Direct location description.
+      Starts with the item, gives exact location. No fluff.
+    query_hints:
+      - "where did I put [item name]"
+      - "location of [item] at home"
+
+  - id: v_ref_002
+    type: voice
+    category: reference
+    language: en
+    word_range: [25, 50]
+    scenario: >
+      You're out somewhere — grocery store, pharmacy, walking — and you remember something
+      you need to buy. You need to say it fast before you forget.
+    style_notes: >
+      Super brief. Often starts mid-thought. Might include rough timing ("by next week",
+      "before Thursday"). Could be one or two items max.
+    query_hints:
+      - "what did I need to buy"
+      - "shopping reminder from [timeframe]"
+
+  - id: v_ref_003
+    type: voice
+    category: reference
+    language: en
+    word_range: [40, 80]
+    scenario: >
+      You figured out how to use a household item or appliance you don't use often —
+      air fryer settings, washing machine program, something on the router. Recording
+      the steps so you don't have to look it up again.
+    style_notes: >
+      Instructional but casual. Number steps loosely. Self-directed ("so next time I
+      just need to..."). Might end with "that's it" or "easy".
+    query_hints:
+      - "how to use [appliance]"
+      - "instructions for [device] settings"
+
+  - id: v_ref_004
+    type: voice
+    category: reference
+    language: en
+    word_range: [35, 65]
+    scenario: >
+      You have an appointment, deadline, or time-sensitive task coming up. You're recording
+      it because you're worried you'll forget to add it to your calendar or it's not in a
+      calendar yet.
+    style_notes: >
+      Slightly anxious urgency. Gives the what, when, maybe why. Ends with a self-instruction
+      ("remember to also...", "don't forget").
+    query_hints:
+      - "upcoming appointment or deadline"
+      - "when is [appointment type]"
+
+  - id: v_ref_005
+    type: voice
+    category: reference
+    language: tr
+    word_range: [30, 60]
+    scenario: >
+      Bir yerden çıkarken ya da bir şey yaparken bir şeyi hatırladın — almayı unuttuğun
+      bir şey, yapman gereken bir şey, bir dahaki sefere hatırlaması gereken bir detay.
+      Türkçe konuşuyorsun çünkü daha doğal geliyor.
+    style_notes: >
+      Çok kısa, pratik. Cümle yapısı gevşek, belki yarım kalıyor. Günlük dil.
+    query_hints:
+      - "hatırlatma / unutma notu"
+      - "bir dahaki sefere yapılacak şey"
+
+voice_journal:
+
+  - id: v_journal_001
+    type: voice
+    category: journal
+    language: en
+    word_range: [70, 120]
+    scenario: >
+      End of day, walking home or getting into bed. You're doing a quick debrief of how
+      the day went — not a full journal, just a voice check-in. The day had a mix of
+      something that went well and something that felt off.
+    style_notes: >
+      Tired but reflective. Not structured — wanders a bit. Mentions one concrete thing
+      that happened. Might end with a loose intention for tomorrow.
+    query_hints:
+      - "how did I feel at the end of [day/date context]"
+      - "day reflection voice note"
+
+  - id: v_journal_002
+    type: voice
+    category: journal
+    language: en
+    word_range: [60, 100]
+    scenario: >
+      Something frustrated you mid-day — a meeting, a misunderstanding, a task that took
+      much longer than expected. You recorded a voice note to vent briefly and process it
+      so it doesn't sit in your head.
+    style_notes: >
+      Slightly venting but self-aware. Knows it's a small thing but still annoying.
+      Comes to a small realization or releases the frustration by the end.
+    query_hints:
+      - "frustration about [context]"
+      - "venting note from [timeframe]"
+
+  - id: v_journal_003
+    type: voice
+    category: journal
+    language: en
+    word_range: [50, 90]
+    scenario: >
+      You just finished something — a work task, a workout, a cleaning session — and
+      feel genuinely satisfied. You want to capture the feeling while it's there because
+      you know you'll forget it quickly and go back to feeling like you never do anything.
+    style_notes: >
+      Warm, brief. Slightly surprised by how good it feels. Self-permission to feel good.
+      No grand conclusions, just the moment.
+    query_hints:
+      - "when I felt good after finishing something"
+      - "small win voice note"
+
+  - id: v_journal_004
+    type: voice
+    category: journal
+    language: tr
+    word_range: [50, 90]
+    scenario: >
+      Gün içinde veya akşam üzeri bir şeyi düşünürken kendinle kısa bir check-in yaptın.
+      Ne hissediyorsun, bugün nerede olduğun hakkında sadece bir dakikalık bir not.
+    style_notes: >
+      Türkçe, içten, yapılandırılmamış. Cümleler arasında doğal geçişler. Kısa.
+    query_hints:
+      - "gün içi check-in"
+      - "bugün nasıl hissettim"
+
+voice_mood:
+
+  - id: v_mood_001
+    type: voice
+    category: mood
+    language: en
+    word_range: [40, 80]
+    scenario: >
+      You're feeling anxious about something specific — an upcoming conversation,
+      a decision you haven't made, something you said. You record it to externalize
+      the feeling rather than let it loop in your head.
+    style_notes: >
+      Quiet, slightly vulnerable. Names the thing causing anxiety specifically.
+      Doesn't need to resolve it — just naming it is the point.
+    query_hints:
+      - "when I was anxious about [topic]"
+      - "anxiety note"
+
+  - id: v_mood_002
+    type: voice
+    category: mood
+    language: en
+    word_range: [30, 60]
+    scenario: >
+      You're feeling flat, low energy, not sad exactly but just kind of empty.
+      Nothing triggered it, it just is. Brief note acknowledging it.
+    style_notes: >
+      Very short. No explanation needed. Honest about not knowing why.
+      Tone is neutral-to-tired, not dramatic.
+    query_hints:
+      - "low energy day"
+      - "feeling flat for no reason"
+
+voice_learning:
+
+  - id: v_learning_001
+    type: voice
+    category: learning
+    language: en
+    word_range: [60, 100]
+    scenario: >
+      You just finished reading something — an article, a chapter, a thread — and
+      want to capture the one key thing that stuck before you forget it. It's a
+      concept you want to be able to find and revisit.
+    style_notes: >
+      Slightly excited. Explains the concept briefly in your own words, not a quote.
+      Probably references where you read it.
+    query_hints:
+      - "concept I learned from [source]"
+      - "what is [concept name]"
+
+  - id: v_learning_002
+    type: voice
+    category: learning
+    language: en
+    word_range: [60, 100]
+    scenario: >
+      You tried a new approach to something — a new morning routine, a different way of
+      working, a technique for focus — and noticed it working or not working. You're
+      recording the observation as a data point.
+    style_notes: >
+      Empirical tone, like logging an experiment. References how long you tried it.
+      Tentative conclusion ("seems like...", "might be worth continuing").
+    query_hints:
+      - "result of trying [new habit or technique]"
+      - "experiment with [approach]"
+
+
+# ─────────────────────────────────────────
+# TEXT NOTES (20)
+# ─────────────────────────────────────────
+
+text_journal:
+
+  - id: t_journal_001
+    type: text
+    category: journal
+    language: en
+    word_range: [120, 200]
+    scenario: >
+      A Sunday or day off that went completely sideways — couldn't decide what to do,
+      felt overwhelmed by options, ended up doing nothing meaningful, guilt crept in.
+      Classic ADHD paralysis meets free time. Writing from a cafe or later that evening.
+    style_notes: >
+      Stream of consciousness, very personal. Lists things you considered doing.
+      Honest about the spiral. Ends with small self-compassion or just leaving it open.
+    query_hints:
+      - "overwhelm on a day off"
+      - "couldn't decide what to do Sunday"
+
+  - id: t_journal_002
+    type: text
+    category: journal
+    language: en
+    word_range: [80, 140]
+    scenario: >
+      A surprisingly good day — things clicked, you got into flow, finished what you
+      planned. You're noting it because good days feel rarer than they are and you want
+      the record to exist for bad days.
+    style_notes: >
+      Warm, slightly surprised. Short and direct. Names what specifically went well.
+      Not over-celebrating — just noting it.
+    query_hints:
+      - "good productive day"
+      - "flow state day"
+
+  - id: t_journal_003
+    type: text
+    category: journal
+    language: en
+    word_range: [100, 180]
+    scenario: >
+      Work is frustrating — expectations don't match reality, something felt pointless,
+      or you felt unseen/underused. You're writing to process it, not to solve it.
+    style_notes: >
+      Somewhat raw. Might question whether you're in the right place. Ends without
+      resolution — either acceptance or still sitting with the frustration.
+    query_hints:
+      - "work frustration note"
+      - "feeling underused at work"
+
+  - id: t_journal_004
+    type: text
+    category: journal
+    language: en
+    word_range: [100, 160]
+    scenario: >
+      You had a hard conversation with someone close — partner, friend, family.
+      Not a fight exactly but something that left you thinking. You're processing
+      what was said and what you actually meant.
+    style_notes: >
+      Careful, introspective. Tries to be fair to both sides. Might uncover something
+      you didn't realize until writing it. No dramatic ending.
+    query_hints:
+      - "processing a conversation with [person]"
+      - "hard talk note"
+
+  - id: t_journal_005
+    type: text
+    category: journal
+    language: en
+    word_range: [80, 130]
+    scenario: >
+      You know exactly what you need to do, you've been meaning to do it for days,
+      but you just... can't start. ADHD paralysis. You're writing the note partly
+      as procrastination, partly to externalize the stuck feeling.
+    style_notes: >
+      Meta and slightly self-deprecating. Aware of the irony of writing a note
+      about not doing the thing. Lists what needs doing. Maybe ends with a
+      micro-commitment ("okay just one thing").
+    query_hints:
+      - "stuck can't start anything"
+      - "task paralysis note"
+
+  - id: t_journal_006
+    type: text
+    category: journal
+    language: en
+    word_range: [90, 150]
+    scenario: >
+      End of week reflection — what actually happened vs what you planned. Some things
+      slipped, one or two things went better than expected. Honest accounting.
+    style_notes: >
+      Slightly structured (this week / next week) but not rigidly. Honest about
+      what didn't happen without too much guilt. Sets one or two loose intentions.
+    query_hints:
+      - "end of week review"
+      - "what I did and didn't do this week"
+
+  - id: t_journal_007
+    type: text
+    category: journal
+    language: en
+    word_range: [80, 130]
+    scenario: >
+      You feel behind — on the project, on goals, on things you said you'd do.
+      The gap between where you are and where you thought you'd be is bothering you.
+    style_notes: >
+      Vulnerable but not catastrophizing. Identifies the specific gap. Might reframe
+      or might just sit with it. Not a productivity plan — just the feeling.
+    query_hints:
+      - "feeling behind on goals"
+      - "gap between plan and reality"
+
+  - id: t_journal_008
+    type: text
+    category: journal
+    language: en
+    word_range: [50, 90]
+    scenario: >
+      Small but real win — shipped something, fixed a bug, had a good conversation,
+      did a thing you'd been avoiding. Worth noting even if it seems minor.
+    style_notes: >
+      Brief. Direct. Might use a dash or parenthetical. Doesn't over-explain the win.
+      Just logs it.
+    query_hints:
+      - "small win I want to remember"
+      - "something I finally finished"
+
+  - id: t_journal_009
+    type: text
+    category: journal
+    language: tr
+    word_range: [80, 140]
+    scenario: >
+      Hayat veya kariyer hakkında bir karar vermeye çalışıyorsun ama net değilsin.
+      İki seçenek arasında gidip geliyorsun, birini seçmek diğerinden vazgeçmek gibi geliyor.
+    style_notes: >
+      İçten, biraz yorgun. Düz yazı, çok yapılandırılmış değil. Belki soru soruyor
+      kendine. Türkçe, günlük dil.
+    query_hints:
+      - "karar veremiyorum not"
+      - "iki seçenek arasında kalmak"
+
+  - id: t_journal_010
+    type: text
+    category: journal
+    language: en
+    word_range: [70, 120]
+    scenario: >
+      You've been comparing yourself to others — someone from your field moving faster,
+      a friend with a cleaner life, someone who seems to have figured it out.
+      The pressure is self-created and you know it but it still lands.
+    style_notes: >
+      Self-aware about the comparison trap. Doesn't pretend it doesn't affect you.
+      Might name the specific comparison. Ends with a small reframe or just honesty.
+    query_hints:
+      - "comparing myself to others"
+      - "feeling behind everyone else"
+
+text_reference:
+
+  - id: t_ref_001
+    type: text
+    category: reference
+    language: en
+    word_range: [60, 100]
+    scenario: >
+      You just learned something interesting about food, nutrition, or health —
+      the difference between two things, a tip, a fact you want to keep. The kind
+      of thing you'd Google again in 3 months if you don't save it.
+    style_notes: >
+      Slightly structured — maybe a short explanation paragraph or two contrasted things.
+      Factual but in your own words. Could have a line or two of personal context
+      ("good to know because I keep buying the wrong one").
+    query_hints:
+      - "difference between [food A] and [food B]"
+      - "nutrition fact about [topic]"
+
+  - id: t_ref_002
+    type: text
+    category: reference
+    language: en
+    word_range: [80, 130]
+    scenario: >
+      You read about a therapy concept, psychological framework, or self-help idea
+      that resonated — ACT, CBT technique, a specific term. You're saving the definition
+      and why it matters to you.
+    style_notes: >
+      Brief definition in your own words. Then a sentence or two on why it's relevant
+      to you personally. Not a copy-paste — your interpretation.
+    query_hints:
+      - "what is [concept name]"
+      - "therapy concept I learned about"
+
+  - id: t_ref_003
+    type: text
+    category: reference
+    language: en
+    word_range: [30, 60]
+    scenario: >
+      You organized something at home — items in a drawer, a specific place for something
+      important. You're logging it so future-you knows where to look.
+    style_notes: >
+      Very short. Direct. Location-first. No fluff. Could be a single sentence.
+    query_hints:
+      - "where did I put [item]"
+      - "location of [thing] at home"
+
+  - id: t_ref_004
+    type: text
+    category: reference
+    language: en
+    word_range: [60, 110]
+    scenario: >
+      A recovery tip, remedy, or health protocol you found helpful — for bad sleep,
+      a cold, low energy, a specific symptom. Format feels slightly like a checklist.
+    style_notes: >
+      Structured with line breaks or a short list. Practical. Maybe a header emoji
+      or bold label. Your words not copy-paste. States the condition first.
+    query_hints:
+      - "what helps with [symptom or condition]"
+      - "recovery tips for [situation]"
+
+  - id: t_ref_005
+    type: text
+    category: reference
+    language: tr
+    word_range: [50, 90]
+    scenario: >
+      Öğrendiğin veya araştırdığın bir şeyi kendi dilinde kaydetmek istedin —
+      bir konu hakkında iki şeyin farkı, bir terim, ya da bir teknik bilgi.
+    style_notes: >
+      Türkçe, kısa açıklama. Kendi cümlelerinle. Yapılandırılmış ama resmi değil.
+    query_hints:
+      - "[konu] hakkında not"
+      - "[terim A] ile [terim B] farkı"
+
+text_insight:
+
+  - id: t_insight_001
+    type: text
+    category: insight
+    language: en
+    word_range: [50, 90]
+    scenario: >
+      You noticed a rule your anxious mind keeps repeating — a "should", a standard,
+      a way you tell yourself you must work or behave. You're writing it down because
+      naming it weakens it slightly.
+    style_notes: >
+      Direct. Might start with the rule itself then challenge it. Short.
+      First-person but not navel-gazing — practical self-observation.
+    query_hints:
+      - "rule my anxious mind keeps pushing"
+      - "should I let go of"
+
+  - id: t_insight_002
+    type: text
+    category: insight
+    language: en
+    word_range: [60, 100]
+    scenario: >
+      You caught yourself doing a thing in a relationship — being defensive, not
+      listening, pre-answering before the other person finished — and noticed it
+      in the moment or shortly after.
+    style_notes: >
+      Self-observing without self-punishing. States the pattern clearly. Maybe
+      notes what triggered it. Ends with an intention or just the observation.
+    query_hints:
+      - "pattern I noticed in how I communicate"
+      - "relationship behavior I want to change"
+
+  - id: t_insight_003
+    type: text
+    category: insight
+    language: en
+    word_range: [60, 100]
+    scenario: >
+      Something about the project connected to something about your life — building
+      for zero-friction because your own brain needs it, designing for ADHD because
+      it's your experience. The meta-layer hit you.
+    style_notes: >
+      Reflective, slightly philosophical. Short. Not a product note — a personal one.
+      The project is a lens for understanding yourself.
+    query_hints:
+      - "project and personal life connection"
+      - "why I'm really building this"
+
+  - id: t_insight_004
+    type: text
+    category: insight
+    language: tr
+    word_range: [50, 90]
+    scenario: >
+      Kendin hakkında bir şeyi fark ettin — bir alışkanlık, bir savunma mekanizması,
+      ya da iyi çalıştığında ne olduğu. Türkçe yazıyorsun çünkü daha doğal geliyor.
+    style_notes: >
+      Kısa, içten. Tam cümle olmayabilir. Doğrudan. Belki bir soru ile bitiyor.
+    query_hints:
+      - "kendi hakkımda fark ettim"
+      - "alışkanlık veya davranış notu"
+
+text_mood:
+
+  - id: t_mood_001
+    type: text
+    category: mood
+    language: en
+    word_range: [40, 80]
+    scenario: >
+      Mid-day, something shifted — you went from okay to not okay, or the reverse.
+      Brief check-in. Not trying to explain it fully, just clocking the state.
+    style_notes: >
+      Very short. Honest. No need for complete sentences. Time-stamped feeling.
+      Could be one or two sentences.
+    query_hints:
+      - "mood check-in mid-day"
+      - "how I was feeling on [day context]"
