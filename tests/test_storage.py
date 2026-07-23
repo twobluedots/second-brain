@@ -5,6 +5,9 @@ def test_log_ask_event_roundtrip(storage):
         query="show me notes about my morning routine",
         input_type="text",
         intent="browse",
+        time_filter="this_week",
+        category_filter="journal",
+        k=0,
         retrieved_note_ids=["id1", "id2"],
         answer=None,
         result_count=2,
@@ -24,6 +27,9 @@ def test_log_ask_event_roundtrip(storage):
 
     row = rows[0]
     assert row["intent"]== "browse"
+    assert row["time_filter"] == "this_week"
+    assert row["category_filter"] == "journal"
+    assert row["k"] == 0
     assert json.loads(row["retrieved_note_ids"]) == ["id1","id2"]
 
     assert row["analyzer_model"] == "openai:gpt-4o-mini"

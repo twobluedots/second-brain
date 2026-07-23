@@ -36,4 +36,3 @@ The **only** place where milestones get re-cut, tasks get re-planned, and "is th
 ## Remember
 - Clarity beats motivation. Avoidance means the task is too big or has undecided decisions — shrink it or spec it.
 - Gaps happen (vacations are real). Restart with the smallest task on the list, not the most interesting one.
-- Nobody judges a prototype repo as harshly as I think.

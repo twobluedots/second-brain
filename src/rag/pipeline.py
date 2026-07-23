@@ -19,6 +19,10 @@ class AskResult:
     notes: List[Dict] = field(default_factory=list)
     fallback: bool = False         # True = weak/no match, retrieval retried unfiltered
     intent: str = "qa"
+    # Query plan fields — logged to ask_log by AskService.
+    time_filter: Optional[str] = None
+    category_filter: Optional[str] = None
+    k: Optional[int] = None
     # Provenance + stage latencies — logged to ask_log by AskService.
     # A None model where a stage ran means that stage fell back without an LLM.
     analyzer_model: Optional[str] = None
@@ -41,6 +45,7 @@ def ask(query: str, storage: Storage) -> AskResult:
     if plan.intent == "browse":
         return AskResult(
             answer=None, notes=result.notes, fallback=result.fallback, intent="browse",
+            time_filter=plan.time_filter, category_filter=plan.category_filter, k=plan.k,
             analyzer_model=plan.model, analyzer_ms=analyzer_ms, retrieval_ms=retrieval_ms,
         )
 
@@ -50,6 +55,7 @@ def ask(query: str, storage: Storage) -> AskResult:
 
     return AskResult(
         answer=answer, notes=result.notes, fallback=result.fallback, intent=plan.intent,
+        time_filter=plan.time_filter, category_filter=plan.category_filter, k=plan.k,
         analyzer_model=plan.model, generator_model=generator_model,
         analyzer_ms=analyzer_ms, retrieval_ms=retrieval_ms, generation_ms=generation_ms,
     )

@@ -143,6 +143,9 @@ class Storage:
                     query TEXT NOT NULL,
                     input_type TEXT,
                     intent TEXT,
+                    time_filter TEXT,
+                    category_filter TEXT,
+                    k INTEGER,
                     retrieved_note_ids TEXT,
                     answer TEXT,
                     result_count INTEGER,
@@ -472,6 +475,9 @@ class Storage:
         retrieved_note_ids: List[str],
         answer: Optional[str],
         result_count: int,
+        time_filter: Optional[str] = None,
+        category_filter: Optional[str] = None,
+        k: Optional[int] = None,
         analyzer_model: Optional[str] = None,
         generator_model: Optional[str] = None,
         analyzer_ms: Optional[int] = None,
@@ -486,11 +492,12 @@ class Storage:
             with self._connect() as conn:
                 conn.execute(
                     """INSERT INTO ask_log
-                       (id, query, input_type, intent, retrieved_note_ids, answer, result_count,
+                       (id, query, input_type, intent, time_filter, category_filter, k,
+                        retrieved_note_ids, answer, result_count,
                         analyzer_model, generator_model, analyzer_ms, retrieval_ms, generation_ms,
                         retrieval_fallback, error, created_at)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                    (str(uuid.uuid4()), query, input_type, intent,
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (str(uuid.uuid4()), query, input_type, intent, time_filter, category_filter, k,
                      json.dumps(retrieved_note_ids or []), answer, result_count,
                      analyzer_model, generator_model, analyzer_ms, retrieval_ms, generation_ms,
                      int(retrieval_fallback), error, self._iso_now())
