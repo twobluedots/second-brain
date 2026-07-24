@@ -16,19 +16,20 @@ Bugs discovered but not yet prioritized for fixing. Update status as things chan
 
 ---
 
-## [OPEN] Embedding model blocks app startup
+## [WONTFIX] Embedding model blocks app startup
 - **Where**: `src/storage/storage.py` — `Storage.__init__`
 - **What**: `SentenceTransformerEmbeddingFunction` (bge-large-en-v1.5) loads into RAM at startup, blocking the UI for ~3–5 seconds before the app is usable
-- **Fix**: Lazy-load the embedding function — initialize it only on first search/save, not in `__init__`
-- **When found**: 2026-07-14
+- **When found**: 2026-07-14 · **Decided**: 2026-07-24
+- **Reasoning**: A 3-5s one-time startup delay is tolerable and lazy-loading wouldn't meaningfully improve the experience — not worth the effort right now.
 
 ---
 
-## [OPEN] Ask page text bar not cleared after submit
+## [FIXED] Ask page text bar not cleared after submit
 - **Where**: Ask tab → `src/app.py` — Ask page input widget
 - **What**: After submitting a question, the text input box is not cleared — the previous query remains in the field
-- **When found**: 2026-07-14
-- **Notes**: Not yet investigated
+- **When found**: 2026-07-14 · **Fixed**: 2026-07-16
+- **Cause**: n/a — fixed as a side effect of other Ask page work, never updated in this tracker at the time
+- **Fix**: `src/app.py:533-579` bumps `ask_form_version` on submit, which changes the `text_key`/`audio_key` used by `st.text_input`/`st.audio_input` (e.g. `ask_text_{version}`) — the rerun mints fresh widgets with no prior value. Same widget-key-bump pattern as the Edit button fix below.
 
 ---
 
