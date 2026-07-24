@@ -574,12 +574,17 @@ elif page == "Ask":
 
             # Stash the result so it survives the form reset below, then
             # bump the widget version to clear the audio/text inputs.
+            st.session_state.ask_query = query
             st.session_state.ask_result = result
             st.session_state.ask_form_version += 1
             st.rerun()
 
     result = st.session_state.get("ask_result")
     if result is not None:
+        last_query = st.session_state.get("ask_query")
+        if last_query:
+            st.caption(f"You asked: {last_query}")
+
         if result.fallback and not result.notes:
             st.info("I couldn't find any relevant notes for that query.")
 

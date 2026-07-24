@@ -768,3 +768,15 @@ DELETE FROM categories WHERE name NOT IN ('task','mood','journal','learning','re
 - ❌ One more service class; two peer services share the Storage dependency (normal)
 
 **When to reconsider:** If a third service appears, check whether shared orchestration concerns (provider chains, logging) deserve a common helper. Parking lot: 👍/👎 rating on answers → ground truth for generation evals.
+
+---
+
+### 2026-07-24: Ask page — echo the asked query above the result
+
+**What I decided:** Added a "You asked: ..." caption above the Ask page result (`src/app.py:577`, `581-584`). Query is stashed in `st.session_state.ask_query` on submit; caption renders once above the fallback/browse/answer branching so it covers all three without duplication.
+
+**Why:** The text input clears itself after submit (widget-key bump), so the query was no longer visible anywhere once the answer showed — easy to lose track of what was asked.
+
+**Trade-offs:**
+- ✅ No schema, pipeline, or `AskResult` changes — just a session_state addition and one render line
+- ❌ Resets on page refresh, same as `ask_result` already does
