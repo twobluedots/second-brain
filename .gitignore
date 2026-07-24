@@ -13,6 +13,7 @@ wheels/
 .env
 
 # Personal data
+rag_eval/*
 data/*
 entries/*
 docs/archive/
@@ -36,14 +37,11 @@ experiments/old_*
 
 # Generated experiment artifacts (indexes + results)
 experiments/artifacts/
-experiments/experiment_*.py
-experiments/simple_experiment.py
-experiments/test_*.py
-experiments/data/voice/
+experiments/archive/
 experiments/*.json
 experiments/*.txt
+experiments/data/voice/
 experiments/data/note_analysis.json
-experiments/data/test_notes.txt
 experiments/data/dataset1/notes_default.jsonl
 experiments/data/dataset1/ragas_testset/
 

@@ -30,7 +30,7 @@ def load_run(run_id: str) -> list:
     for name in [run_id, f"run_{run_id}"]:
         path = RUNS_DIR / f"{name}.jsonl"
         if path.exists():
-            return [json.loads(l) for l in open(path) if l.strip()]
+            return [json.loads(line) for line in open(path) if line.strip()]
     raise FileNotFoundError(f"No run file found for: {run_id}")
 
 
@@ -59,12 +59,12 @@ def show(row: dict, notes: dict):
     if rank:
         print(f"result   : found at rank {rank}  (precision {row['precision']:.2f})")
     else:
-        print(f"result   : NOT FOUND")
+        print("result   : NOT FOUND")
 
     print(f"\nEXPECTED [{expected_id}]:")
     print(f"  {notes.get(expected_id, '?')}")
 
-    print(f"\nRETRIEVED:")
+    print("\nRETRIEVED:")
     for i, rid in enumerate(retrieved_ids[:5], 1):
         marker = "✓" if rid == expected_id else " "
         print(f"  {marker} #{i} [{rid}]")

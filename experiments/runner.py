@@ -48,7 +48,8 @@ def run(config: dict):
 
     dataset = config["dataset"]
     eval_path = DATASETS[dataset].parent / "eval_set.jsonl"
-    eval_pairs = [json.loads(l) for l in open(eval_path) if l.strip()]
+    eval_pairs = [json.loads(line) for line in open(eval_path) if line.strip()]
+
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     runs_dir = RESULTS_DIR / "runs"
@@ -108,7 +109,7 @@ def run(config: dict):
     print(f"  avg recall:    {avg_recall:.3f}")
     print(f"  avg precision: {avg_precision:.3f}")
     print(f"  {jsonl_path.name} written")
-    print(f"  logged to runs.db")
+    print("  logged to runs.db")
 
 
 if __name__ == "__main__":

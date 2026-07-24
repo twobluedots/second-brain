@@ -4,7 +4,6 @@ Peer of NoteService: NoteService owns the capture/CRUD lifecycle,
 AskService owns question → answer. UI talks to services, never to storage.
 """
 
-from typing import Optional
 
 from src.logger import logger
 from src.rag.pipeline import AskResult, ask

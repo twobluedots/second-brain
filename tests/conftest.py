@@ -9,6 +9,7 @@ def storage(tmp_path):
     return Storage(
         db_path=str(tmp_path / "test.db"),
         chroma_path=str(tmp_path / "chroma"),
+        embedding_model="all-MiniLM-L6-v2",
     )
 
 

@@ -16,7 +16,7 @@ def load_run(run_id: str) -> dict:
     for name in [run_id, f"run_{run_id}"]:
         path = RUNS_DIR / f"{name}.jsonl"
         if path.exists():
-            rows = [json.loads(l) for l in open(path) if l.strip()]
+            rows = [json.loads(line) for line in open(path) if line.strip()]
             return {r["query"]: r for r in rows}, rows[0]
     raise FileNotFoundError(f"No run file found for: {run_id}")
 
@@ -61,15 +61,15 @@ def main():
             regressed.append((q, ra, rb, a_row["expected_id"]))
 
     def summary(by_query: dict) -> dict:
-        rows = list(by_query.values())
+        rows = [r for r in by_query.values() if r.get("mrr") is not None]
         n = len(rows)
-        rank1 = sum(1 for r in rows if r["precision"] == 1.0)
-        found = sum(1 for r in rows if r["recall"] == 1.0 and r["precision"] < 1.0)
+        rank1 = sum(1 for r in rows if r["mrr"] == 1.0)
+        found = sum(1 for r in rows if r["recall"] == 1.0 and r["mrr"] < 1.0)
         missed = sum(1 for r in rows if r["recall"] == 0.0)
-        avg_r = sum(r["recall"] for r in rows) / n
-        avg_p = sum(r["precision"] for r in rows) / n
+        avg_r = sum(r["recall"] for r in rows) / n if n else 0.0
+        avg_m = sum(r["mrr"] for r in rows) / n if n else 0.0
         return {"n": n, "rank1": rank1, "found": found, "missed": missed,
-                "avg_recall": avg_r, "avg_precision": avg_p}
+                "avg_recall": avg_r, "avg_mrr": avg_m}
 
     sa = summary(a_by_query)
     sb = summary(b_by_query)
@@ -87,7 +87,7 @@ def main():
     row("~ found, not #1", f"{sa['found']}  ({sa['found']/sa['n']*100:.0f}%)", f"{sb['found']}  ({sb['found']/sb['n']*100:.0f}%)")
     row("✗ not found", f"{sa['missed']}  ({sa['missed']/sa['n']*100:.0f}%)", f"{sb['missed']}  ({sb['missed']/sb['n']*100:.0f}%)")
     row("avg recall", f"{sa['avg_recall']:.3f}", f"{sb['avg_recall']:.3f}")
-    row("avg precision", f"{sa['avg_precision']:.3f}", f"{sb['avg_precision']:.3f}")
+    row("avg mrr", f"{sa['avg_mrr']:.3f}", f"{sb['avg_mrr']:.3f}")
 
     def fmt_rank(r):
         return "✗" if r is None else f"#{r}"

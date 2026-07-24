@@ -9,8 +9,6 @@ Usage: python migrate_json_entries.py
 """
 
 import json
-import os
-from datetime import datetime
 from pathlib import Path
 
 from src.storage.storage import Storage

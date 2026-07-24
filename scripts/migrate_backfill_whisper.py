@@ -57,7 +57,7 @@ def main():
         print(f"  old content (context): {repr(old_content)}")
 
         if not file_path or not Path(file_path).exists():
-            print(f"  → SKIP: audio file not found\n")
+            print("  → SKIP: audio file not found\n")
             stats["file_missing"] += 1
             continue
 

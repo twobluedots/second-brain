@@ -79,7 +79,6 @@ def analyze(entries: list[dict]) -> dict:
     for ctype, items in by_type.items():
         lengths_chars = [e["char_len"] for e in items]
         lengths_words = [word_count(e["content"]) for e in items]
-        lengths_sentences = [sentence_count(e["content"]) for e in items]
 
         category_dist = Counter(e["category"] for e in items)
 
@@ -117,10 +116,10 @@ def analyze(entries: list[dict]) -> dict:
                 "avg": round(sum(lengths_chars) / len(lengths_chars)),
                 "median": sorted(lengths_chars)[len(lengths_chars) // 2],
                 "buckets": {
-                    "under_100": sum(1 for l in lengths_chars if l < 100),
-                    "100_300": sum(1 for l in lengths_chars if 100 <= l < 300),
-                    "300_600": sum(1 for l in lengths_chars if 300 <= l < 600),
-                    "600_plus": sum(1 for l in lengths_chars if l >= 600),
+                    "under_100": sum(1 for n in lengths_chars if n < 100),
+                    "100_300": sum(1 for n in lengths_chars if 100 <= n < 300),
+                    "300_600": sum(1 for n in lengths_chars if 300 <= n < 600),
+                    "600_plus": sum(1 for n in lengths_chars if n >= 600),
                 },
             },
             "length_words": {
@@ -165,33 +164,33 @@ def print_report(report: dict):
         print(f"Length (words):  min={lw['min']}  avg={lw['avg']}  max={lw['max']}")
 
         b = lc["buckets"]
-        print(f"\nLength buckets:")
+        print("\nLength buckets:")
         print(f"  <100 chars:   {b['under_100']:2d} notes  {'█' * b['under_100']}")
         print(f"  100-300:      {b['100_300']:2d} notes  {'█' * b['100_300']}")
         print(f"  300-600:      {b['300_600']:2d} notes  {'█' * b['300_600']}")
         print(f"  600+:         {b['600_plus']:2d} notes  {'█' * b['600_plus']}")
 
-        print(f"\nCategory distribution:")
+        print("\nCategory distribution:")
         for cat, count in data["category_distribution"].items():
             print(f"  {cat or 'none':<15} {count:2d}  {'█' * count}")
 
-        print(f"\nTopic presence (keyword hits across all notes):")
+        print("\nTopic presence (keyword hits across all notes):")
         for topic, score in list(data["topic_distribution"].items())[:6]:
             print(f"  {topic:<25} {score:3d}")
 
         ts = data["topic_shift_analysis"]
-        print(f"\nTopic shift signals:")
+        print("\nTopic shift signals:")
         print(f"  0 shifts:  {ts['notes_with_0_shifts']} notes")
         print(f"  1 shift:   {ts['notes_with_1_shift']} notes")
         print(f"  2+ shifts: {ts['notes_with_2plus_shifts']} notes")
 
         if ts["multi_topic_examples"]:
-            print(f"\n  Multi-topic examples:")
+            print("\n  Multi-topic examples:")
             for ex in ts["multi_topic_examples"]:
                 print(f"    [{ex['chars']} chars] shifts={ex['shifts']}")
                 print(f"    \"{ex['preview']}\"")
 
-        print(f"\nLongest notes:")
+        print("\nLongest notes:")
         for n in data["longest_notes"]:
             print(f"  [{n['chars']}c / {n['words']}w / {n['sentences']}s] cat={n['category']} topics={n['top_topics']}")
             if n["topic_shift_signals"]:

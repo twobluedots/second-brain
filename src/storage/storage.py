@@ -26,7 +26,7 @@ class Storage:
     - ChromaDB: semantic search index
     """
 
-    def __init__(self, db_path=DB_PATH, chroma_path=CHROMA_PATH):
+    def __init__(self, db_path=DB_PATH, chroma_path=CHROMA_PATH, embedding_model=EMBEDDING_MODEL):
         self.db_path = Path(db_path)
         self.chroma_path = Path(chroma_path)
 
@@ -36,7 +36,7 @@ class Storage:
 
         # Initialize ChromaDB
         self.chroma = chromadb.PersistentClient(path=str(self.chroma_path))
-        self._ef = SentenceTransformerEmbeddingFunction(model_name=EMBEDDING_MODEL)
+        self._ef = SentenceTransformerEmbeddingFunction(model_name=embedding_model)
         self.collection = self.chroma.get_or_create_collection(
             name="entries",
             embedding_function=self._ef
