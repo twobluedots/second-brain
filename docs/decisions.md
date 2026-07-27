@@ -780,3 +780,27 @@ DELETE FROM categories WHERE name NOT IN ('task','mood','journal','learning','re
 **Trade-offs:**
 - ✅ No schema, pipeline, or `AskResult` changes — just a session_state addition and one render line
 - ❌ Resets on page refresh, same as `ask_result` already does
+
+---
+
+### 2026-07-27: Doc restructure — versioned plan files + two-track homes
+
+**What I decided:**
+- `plan.md` is **always the current version's operating doc** (build track): Current Focus + This Week + weekly check-in log + rules + parking lot. When a version ships, snapshot it to `plan-vN.md` and roll `plan.md` into the next version. The name `plan.md` always means "now" — so `workflow.md`'s references never break.
+- v1 (MVP, M1–M4) archived frozen as `plan-v1.md`.
+- `roadmap.md` = direction across all versions. `learning.md` + `docs/learning/` = the eval/learning track (separate, permanent, version-independent). Retired M-numbering for future work — "M5" was a transient mislabel for deployment, which is a roadmap research thread, not a milestone.
+- Locked the **v2 thesis** as the current focus: *"Do the notes I save compound over time into a valuable knowledge base on a topic, or just pile up?"* — evidence-based (needs weeks of usage), not a feature checkbox.
+
+**Why:**
+- `plan.md` had become unmanageable: two mental models fighting (MVP milestones M1–M5 vs. the versioned-product framing from the 2026-07-20 vision session), a stale "This Week", and a phantom "M5" never defined. Root cause: the vision session reframed the project from "MVP that finishes" to "versioned product + ongoing research", but plan.md stayed in the old frame.
+- Keeping the *current* doc named `plan.md` (not `plan-v2.md`) means zero relearning and no edits to `workflow.md`.
+- The eval track already had a permanent home (`learning.md` + `docs/learning/`); it was never build-plan content, so versioned plan files don't orphan it.
+
+**What I tried first:** cycled through `now.md`+`log.md` (clean-desk split), a single `plan-v2.md`, and a separate check-in log — each stumbled on a different doc having a different lifecycle. Resolved once it was clear the eval track is version-independent and already homed, leaving only the build plan to restructure.
+
+**Trade-offs:**
+- ✅ Current work is always `plan.md`; finished versions archive cleanly with a suffix; `workflow.md` untouched
+- ✅ Each doc has one lifecycle: plan.md (current build), plan-vN.md (frozen), roadmap.md (direction), learning.md (eval track)
+- ❌ Rules + parking lot get copied forward at each version boundary (rare, ~monthly)
+
+**When to reconsider:** If the version-boundary copy-forward becomes annoying, or if a doc starts serving two lifecycles again.
