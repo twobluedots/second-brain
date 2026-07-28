@@ -804,3 +804,17 @@ DELETE FROM categories WHERE name NOT IN ('task','mood','journal','learning','re
 - ❌ Rules + parking lot get copied forward at each version boundary (rare, ~monthly)
 
 **When to reconsider:** If the version-boundary copy-forward becomes annoying, or if a doc starts serving two lifecycles again.
+
+---
+
+### 2026-07-28: Tags minimal capture — st.multiselect over streamlit-tags
+
+**What I decided:** Use native `st.multiselect(accept_new_options=True)` for tag input (see `docs/design/tags-minimal-capture.md`), not the third-party `streamlit-tags` package.
+
+**Why:**
+- Zero new dependency — Streamlit 1.51.0 already supports free-text additions to multiselect
+- Gives pills + × removal + autocomplete against existing tags natively
+
+**What I tried first:** Didn't evaluate `streamlit-tags` in depth — parked instead of spending time confirming its delimiter behavior (space vs. Enter/comma) since `st.multiselect` already covered every requirement.
+
+**When to reconsider:** If the `st.multiselect` tag UX feels wrong once actually used (e.g. autocomplete or pill interaction is clunky on mobile) — check `streamlit-tags` then.
