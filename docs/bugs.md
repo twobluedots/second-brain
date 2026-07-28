@@ -6,6 +6,15 @@ Bugs discovered but not yet prioritized for fixing. Update status as things chan
 
 ---
 
+## [OPEN] Journal entry timestamps shown in UTC, not local time
+- **Where**: Journal tab → `src/app.py:471`
+- **What**: Each journal entry is prefixed with `HH:MM` formatted directly from the UTC `created_at` string — displayed time doesn't match the user's local clock
+- **When found**: 2026-07-27
+- **Cause**: `datetime.fromisoformat(entry["created_at"]...).strftime("%H:%M")` never converts from UTC to local timezone before formatting
+- **Related**: same root cause family as the open backlog item in `docs/plan.md` ("Today" filters use UTC midnight instead of user-local timezone — Search presets, Journal day range, Mirror week math)
+
+---
+
 ## [FIXED] Ask logging fails — missing column on ask_log table
 - **Where**: Ask page logging → `ask_log` table
 - **What**: `WARNING | Ask logging failed: table ask_log has no column named retrieval_fallback` — column was added to the model/code but no migration script was written to alter the existing table
