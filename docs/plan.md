@@ -23,10 +23,11 @@ Day shape: **AM = app, PM = eval/learning.**
 **Week goal:** By Friday, the machine that feeds the v2 bet is running — I'm capturing tagged notes from my phone daily, the docs are reorganized, and the eval pipeline gave me its first real numbers.
 
 ### AM — app track (in order)
-- [ ] **Today — Tailscale** (~30 min) — get phone capture working. Starts the usage clock (feeds both v3 time-data and the v2 compound bet). Timebox: if it fights past ~1 hr, log it in bugs.md and move on.
-- [ ] **Doc migration** — freeze plan.md, stand up this file, decisions.md entry. *(in progress)*
-- [ ] **Tags — minimal capture** — tag field on the Entry model + SQLite + ChromaDB metadata; free-text multi-tag input on the capture form; tags shown on note cards. **Rough UI is fine** — the point is data starts accumulating. Goes *before* the refactor so the clock starts early.
-  - Spec (15-min ratify before building): free-text user-defined · multi-tag per note · manual only (no LLM suggest yet) · stored SQLite + Chroma metadata · **no backfill** of old notes (batch script later, once real topics are known).
+- [x] **Today — Tailscale** (~30 min) — get phone capture working. Starts the usage clock (feeds both v3 time-data and the v2 compound bet). Timebox: if it fights past ~1 hr, log it in bugs.md and move on.
+- [x] **Doc migration** — freeze plan.md, stand up this file, decisions.md entry. *(in progress)*
+- [x] **Tags — minimal capture** — tag field on the Entry model + SQLite + ~~ChromaDB metadata~~ (deferred — own `tags` table instead, see spec non-goals); free-text multi-tag input on the capture form (all three dialogs) + editable on existing notes; tags shown on note cards. **Rough UI is fine** — the point is data starts accumulating. Goes *before* the refactor so the clock starts early.
+  - Spec (15-min ratify before building): free-text user-defined · multi-tag per note · manual only (no LLM suggest yet) · stored SQLite + ~~Chroma metadata~~ (deferred) · **no backfill** of old notes (batch script later, once real topics are known).
+  - Built: [`design/tags-minimal-capture.md`](design/tags-minimal-capture.md). Deltas from spec logged in `decisions.md` (2026-07-29).
 - [ ] **UI refactor** — the scoped bundle: multipage, `src/ui/components.py`, card de-dup, services factory, `date_preset`→service, `lru_cache` categorize, `whisper_ms`. Absorbs the rough tag UI into clean components. *(soft — carrying it to next week is fine.)*
 
 ### PM — eval track (all week)

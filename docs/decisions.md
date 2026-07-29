@@ -818,3 +818,13 @@ DELETE FROM categories WHERE name NOT IN ('task','mood','journal','learning','re
 **What I tried first:** Didn't evaluate `streamlit-tags` in depth — parked instead of spending time confirming its delimiter behavior (space vs. Enter/comma) since `st.multiselect` already covered every requirement.
 
 **When to reconsider:** If the `st.multiselect` tag UX feels wrong once actually used (e.g. autocomplete or pill interaction is clunky on mobile) — check `streamlit-tags` then.
+
+---
+
+### 2026-07-29: Tags minimal capture — build deltas from spec
+
+**What I decided:** Distinct tags live in their own `tags` table (mirrors `categories`), not derived from `entries.tags` on read — cheaper than scanning/deduping every entry on each Streamlit rerun. Tags are case-sensitive, not case-folded (reverses the spec doc's original line — updated there too). Tag editing added to `edit_note_dialog`, beyond the spec's original touchpoints. Full detail in `docs/design/tags-minimal-capture.md`.
+
+**Why:** Case-folding would be a silent auto-merge; tag rename/merge is already deferred to a future session — better to keep merging a deliberate later action than an automatic one now.
+
+**Known gap:** Tags that predate the `tags` table (e.g. Journal's hardcoded `["interstitial", "journal"]`) aren't reachable in that entry's edit dialog until reused elsewhere on a new save — no backfill migration built this round.

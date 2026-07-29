@@ -100,6 +100,7 @@ def render_entry_card(entry: dict, key_prefix: str, show_category: bool = True):
                         "entry_id": entry["id"],
                         "current_category": category or "journal",
                         "current_content": entry.get("content", ""),
+                        "current_tags": entry.get("tags") or [],
                     }
         else:
             col_time, col_edit = st.columns([8, 1])
@@ -111,7 +112,18 @@ def render_entry_card(entry: dict, key_prefix: str, show_category: bool = True):
                         "entry_id": entry["id"],
                         "current_category": category or "journal",
                         "current_content": entry.get("content", ""),
+                        "current_tags": entry.get("tags") or [],
                     }
+
+        tags = entry.get("tags")
+        if tags:
+            pills_html = " ".join(
+                f'<span style="background:rgba(0,0,0,0.06);color:#444;padding:1px 8px;'
+                f'border-radius:10px;font-size:0.75em;border:1px solid rgba(0,0,0,0.15);margin-right:4px">'
+                f'#{tag}</span>'
+                for tag in tags
+            )
+            st.markdown(pills_html, unsafe_allow_html=True)
 
 page = st.sidebar.radio("Navigation", ["Capture", "Ask", "Search", "Recents", "Categories", "Journal", "Mirror"], label_visibility="collapsed")
 
@@ -141,6 +153,7 @@ def add_voice_dialog():
             st.error(f"Couldn't write audio file: {e}")
 
     context = st.text_input("Optional context", placeholder="This audio is about...")
+    tags = st.multiselect("Tags", options=service.get_all_tags(), accept_new_options=True, default=[])
     if st.button("Save"):
         if audio:
             try:
@@ -155,9 +168,10 @@ def add_voice_dialog():
                         content_type="voice",
                         file_path=file_path,
                         description=description,
+                        tags=tags,
                     )
                 st.session_state.pop("voice_draft_path", None)
-                st.session_state.entries.append({"type": "voice", "audio": audio, "content": transcription or context, "category": category, "id": entry_id})
+                st.session_state.entries.append({"type": "voice", "audio": audio, "content": transcription or context, "category": category, "id": entry_id, "tags": tags})
                 st.rerun()
             except Exception as e:
                 if st.session_state.get("voice_draft_path"):
@@ -173,13 +187,14 @@ def add_image_dialog():
     st.write("Record or upload an image:")
     image = st.camera_input("Take photo")
     content = st.text_input("Optional context", placeholder="This image is about...")
+    tags = st.multiselect("Tags", options=service.get_all_tags(), accept_new_options=True, default=[])
     if st.button("Save"):
         if image:
             try:
                 file_path = save_file(image, str(uuid.uuid4()))
                 with st.spinner("Saving..."):
-                    entry_id, category = service.save_note(content=content, content_type="image", file_path=file_path)
-                st.session_state.entries.append({"type": "image", "image": image, "content": content, "category": category, "id": entry_id})
+                    entry_id, category = service.save_note(content=content, content_type="image", file_path=file_path, tags=tags)
+                st.session_state.entries.append({"type": "image", "image": image, "content": content, "category": category, "id": entry_id, "tags": tags})
                 st.rerun()
             except Exception as e:
                 st.error(f"Couldn't save — please try again. Error: {e}")
@@ -191,12 +206,13 @@ def add_image_dialog():
 def add_text_dialog():
     st.write("What are you thinking?")
     text = st.text_area("Enter text", placeholder="I think that...")
+    tags = st.multiselect("Tags", options=service.get_all_tags(), accept_new_options=True, default=[])
     if st.button("Save"):
         if text:
             try:
                 with st.spinner("Saving..."):
-                    entry_id, category = service.save_note(content=text, content_type="text")
-                st.session_state.entries.append({"type": "text", "content": text, "category": category, "id": entry_id})
+                    entry_id, category = service.save_note(content=text, content_type="text", tags=tags)
+                st.session_state.entries.append({"type": "text", "content": text, "category": category, "id": entry_id, "tags": tags})
                 st.rerun()
             except Exception as e:
                 st.error(f"Couldn't save — please try again. Error: {e}")
@@ -210,11 +226,13 @@ def _clear_edit_target():
 
 
 @st.dialog("Edit Note", on_dismiss=_clear_edit_target)
-def edit_note_dialog(entry_id: str, current_category: str, current_content: str):
+def edit_note_dialog(entry_id: str, current_category: str, current_content: str, current_tags: list = None):
+    current_tags = current_tags or []
     new_content = st.text_area("Content", value=current_content)
     cats = service.get_categories()
     idx = cats.index(current_category) if current_category in cats else 0
     new_cat = st.selectbox("Category", cats, index=idx)
+    new_tags = st.multiselect("Tags", options=service.get_all_tags(), default=current_tags, accept_new_options=True)
     if st.button("Save", use_container_width=True, type="secondary"):
         ask_result = st.session_state.get("ask_result")
         if new_content != current_content:
@@ -238,6 +256,17 @@ def edit_note_dialog(entry_id: str, current_category: str, current_content: str)
                 for n in ask_result.notes:
                     if n.get("id") == entry_id:
                         n["category"] = new_cat
+                        break
+        if new_tags != current_tags:
+            saved_tags = service.update_tags(entry_id, new_tags)
+            for e in st.session_state.get("entries", []):
+                if e.get("id") == entry_id:
+                    e["tags"] = saved_tags
+                    break
+            if ask_result is not None:
+                for n in ask_result.notes:
+                    if n.get("id") == entry_id:
+                        n["tags"] = saved_tags
                         break
         _clear_edit_target()
         st.rerun()

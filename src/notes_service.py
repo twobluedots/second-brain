@@ -6,6 +6,7 @@ from src.categorize import categorize
 from src.logger import logger
 from src.models import Entry
 from src.storage.storage import Storage
+from src.tags import normalize_tags
 from config import REDISCOVERY_CATEGORIES
 
 
@@ -32,7 +33,7 @@ class NoteService:
             content=content,
             content_type=content_type,
             category=category,
-            tags=tags or [],
+            tags=normalize_tags(tags or []),
             file_path=file_path,
             description=description,
         )
@@ -45,6 +46,12 @@ class NoteService:
         self.storage.update(entry_id, {"content": content})
         logger.info("Content updated: %s", entry_id)
 
+    def update_tags(self, entry_id: str, tags: list) -> list[str]:
+        normalized = normalize_tags(tags or [])
+        self.storage.update(entry_id, {"tags": normalized})
+        logger.info("Tags updated: %s", entry_id)
+        return normalized
+
     def delete_note(self, entry_id: str) -> None:
         self.storage.delete(entry_id)
         logger.info("Note deleted: %s", entry_id)
@@ -56,6 +63,9 @@ class NoteService:
 
     def get_categories(self) -> list[str]:
         return self.storage.get_categories()
+
+    def get_all_tags(self) -> list[str]:
+        return self.storage.get_all_tags()
 
     def get_recent(self, limit: int = 10):
         return self.storage.get_recent(limit)

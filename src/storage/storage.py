@@ -118,7 +118,12 @@ class Storage:
                     name TEXT PRIMARY KEY,
                     created_at TEXT NOT NULL
                 );
-                
+
+                CREATE TABLE IF NOT EXISTS tags (
+                    name TEXT PRIMARY KEY,
+                    last_used_at TEXT NOT NULL
+                );
+
                 CREATE TABLE IF NOT EXISTS category_events (
                     id TEXT PRIMARY KEY,
                     entry_id TEXT NOT NULL,
@@ -163,6 +168,7 @@ class Storage:
                 CREATE INDEX IF NOT EXISTS idx_entries_deleted_at ON entries(deleted_at);
                 CREATE INDEX IF NOT EXISTS idx_entries_category ON entries(category);
                 CREATE INDEX IF NOT EXISTS idx_entries_content_type ON entries(content_type);
+                CREATE INDEX IF NOT EXISTS idx_tags_last_used ON tags(last_used_at);
             """)
             
             # Populate default categories (INSERT OR IGNORE, so safe on repeated calls)
@@ -219,6 +225,13 @@ class Storage:
                 logger.error("Save failed — duplicate entry %s: %s", entry_id, e)
                 raise ValueError(f"Entry {entry_id} already exists") from e
 
+            for tag in entry.tags:
+                conn.execute(
+                    """INSERT INTO tags (name, last_used_at) VALUES (?, ?)
+                       ON CONFLICT(name) DO UPDATE SET last_used_at = excluded.last_used_at""",
+                    (tag, now)
+                )
+
         logger.info("Saved entry %s (type=%s)", entry_id, entry.content_type)
 
         # Save to ChromaDB — combine content + description for richer search
@@ -259,18 +272,31 @@ class Storage:
         """
         if not fields:
             return
-        
+
+        fields = dict(fields)
+        tags_to_upsert = None
+        if "tags" in fields:
+            tags_to_upsert = fields["tags"] or []
+            fields["tags"] = json.dumps(tags_to_upsert)
+
         fields["modified_at"] = self._iso_now()
-        
+
         # Build SQL update
         set_clause = ", ".join([f"{key} = ?" for key in fields.keys()])
         values = list(fields.values()) + [entry_id]
-        
+
         with self._connect() as conn:
             conn.execute(
                 f"UPDATE entries SET {set_clause} WHERE id = ? AND deleted_at IS NULL",
                 values
             )
+            if tags_to_upsert is not None:
+                for tag in tags_to_upsert:
+                    conn.execute(
+                        """INSERT INTO tags (name, last_used_at) VALUES (?, ?)
+                           ON CONFLICT(name) DO UPDATE SET last_used_at = excluded.last_used_at""",
+                        (tag, fields["modified_at"])
+                    )
         logger.info("Updated entry %s (fields=%s)", entry_id, list(fields.keys()))
 
         # If content updated, refresh ChromaDB
@@ -451,6 +477,16 @@ class Storage:
             ).fetchall()
         
         return {row[0] or "uncategorized": row[1] for row in rows}
+
+    # ============================================================================
+    # TAG OPERATIONS
+    # ============================================================================
+
+    def get_all_tags(self) -> List[str]:
+        """Get all distinct tags, most-recently-used first."""
+        with self._connect() as conn:
+            rows = conn.execute("SELECT name FROM tags ORDER BY last_used_at DESC").fetchall()
+        return [row[0] for row in rows]
 
     # ============================================================================
     # SEARCH OPERATIONS
