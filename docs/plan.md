@@ -29,6 +29,7 @@ Day shape: **AM = app, PM = eval/learning.**
   - Spec (15-min ratify before building): free-text user-defined · multi-tag per note · manual only (no LLM suggest yet) · stored SQLite + ~~Chroma metadata~~ (deferred) · **no backfill** of old notes (batch script later, once real topics are known).
   - Built: [`design/tags-minimal-capture.md`](design/tags-minimal-capture.md). Deltas from spec logged in `decisions.md` (2026-07-29).
 - [ ] **UI refactor** — the scoped bundle: multipage, `src/ui/components.py`, card de-dup, services factory, `date_preset`→service, `lru_cache` categorize, `whisper_ms`. Absorbs the rough tag UI into clean components. *(soft — carrying it to next week is fine.)*
+  - Spec: [`design/ui-refactor.md`](design/ui-refactor.md) — decisions already made (prior scoping session), written up + sequenced into 3 build groups.
 
 ### PM — eval track (all week)
 - [ ] **RAGAS self-study → `eval_ask.py` running** — read the docs *myself* (TestsetGenerator + the three metrics already in the file: faithfulness, answer_relevancy, ContextPrecisionWithoutReference), get it running on the 5 questions, read the first scores, and **write down where the pipeline is weak**. That findings list is the deliverable.
