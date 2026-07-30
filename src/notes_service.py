@@ -3,6 +3,7 @@ from collections import Counter
 from datetime import datetime, timedelta, timezone
 
 from src.categorize import categorize
+from src.utils import time_filter_to_ts
 from src.logger import logger
 from src.models import Entry
 from src.storage.storage import Storage
@@ -74,6 +75,9 @@ class NoteService:
         # Two execution paths for the same intent ("give me entries matching these criteria"):
         # - text present → ChromaDB vector search, metadata filters applied as pre-filters
         # - no text → SQLite only, filters run directly (vector search on empty string is meaningless)
+        if date_preset and date_preset != "All time" and date_from is None:
+            ts = time_filter_to_ts(date_preset.lower().replace(" ", "_"))
+            date_from = datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         if query.strip():
             clauses = []
             if content_type and content_type != "all":

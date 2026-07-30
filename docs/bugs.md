@@ -6,6 +6,16 @@ Bugs discovered but not yet prioritized for fixing. Update status as things chan
 
 ---
 
+## [OPEN] Audio recording broken when accessing via Tailscale (non-localhost)
+- **Where**: Ask page → `st.audio_input` widget
+- **What**: Widget shows "An error has occurred, please try again." — browser blocks microphone access entirely; no Python traceback
+- **When found**: 2026-07-30
+- **Cause**: Browser MediaRecorder API requires a secure context (HTTPS or localhost). Tailscale access is `http://100.x.x.x:8501` — not secure, so mic is blocked at the browser level before any Python code runs
+- **Workaround**: Use `http://localhost:8501` when testing on the same machine
+- **Fix path**: Enable HTTPS via `tailscale cert <device-name>` and serve over HTTPS; or run a local TLS proxy
+
+---
+
 ## [OPEN] Journal entry timestamps shown in UTC, not local time
 - **Where**: Journal tab → `src/app.py:471`
 - **What**: Each journal entry is prefixed with `HH:MM` formatted directly from the UTC `created_at` string — displayed time doesn't match the user's local clock

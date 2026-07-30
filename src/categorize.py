@@ -1,5 +1,6 @@
 import json
 import os
+from functools import lru_cache
 
 from config import CATEGORY_DESCRIPTIONS, DEFAULT_CATEGORIES, OLLAMA_MODEL
 from src.logger import logger
@@ -61,6 +62,7 @@ def _with_ollama(prompt: str) -> str:
     return _parse(response["message"]["content"])
 
 
+@lru_cache(maxsize=256)
 def categorize(text: str, description: str = None) -> str:
     """Returns the single best category. Tries OpenAI → Anthropic → Ollama → 'journal'."""
     if not text or not text.strip():

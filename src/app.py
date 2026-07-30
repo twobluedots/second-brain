@@ -9,6 +9,7 @@ from src.notes_service import NoteService
 from src.rag.service import AskService
 from src.storage.storage import Storage
 from src.processing import load_model, process_voice_note
+from src.utils import time_filter_to_iso
 from config import DEFAULT_CATEGORIES, CATEGORY_MIRROR_LINES
 
 os.makedirs("entries", exist_ok=True)
@@ -159,7 +160,8 @@ def add_voice_dialog():
             try:
                 file_path = st.session_state.get("voice_draft_path") or save_file(audio, str(uuid.uuid4()))
                 with st.spinner("Transcribing..."):
-                    transcription = process_voice_note(file_path, get_whisper_model())
+                    transcription, whisper_ms = process_voice_note(file_path, get_whisper_model())
+                    logger.info("Whisper transcription: %d ms", whisper_ms)
                 content = transcription or context or ""
                 description = context if transcription else None
                 with st.spinner("Saving..."):
@@ -357,20 +359,9 @@ elif page == "Search":
     # Button click stores the search *intent*; rendering below recomputes from it on
     # every rerun, so edits/deletes are always reflected (no stale results cache).
     if st.button("Search"):
-        now = datetime.now(timezone.utc)
-        if date_preset == "Today":
-            date_from = now.replace(hour=0, minute=0, second=0, microsecond=0).strftime("%Y-%m-%dT%H:%M:%SZ")
-        elif date_preset == "This week":
-            date_from = (now - timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%SZ")
-        elif date_preset == "This month":
-            date_from = (now - timedelta(days=30)).strftime("%Y-%m-%dT%H:%M:%SZ")
-        else:
-            date_from = None
-
         st.session_state.search_params = {
             "query": query,
             "content_type": None if content_type_filter == "All" else content_type_filter.lower(),
-            "date_from": date_from,
             "date_preset": date_preset,
         }
         st.session_state.search_log_pending = True  # log only the click, not every rerun
@@ -381,7 +372,6 @@ elif page == "Search":
             results = service.search(
                 params["query"],
                 content_type=params["content_type"],
-                date_from=params["date_from"],
                 date_preset=params["date_preset"],
                 log_event=st.session_state.pop("search_log_pending", False),
             )
@@ -487,7 +477,7 @@ elif page == "Journal":
         else:
             st.error("Journal entry cannot be empty.")
 
-    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0).isoformat().replace("+00:00", "") + "Z"
+    today_start = time_filter_to_iso("today")
     today_end = datetime.now(timezone.utc).replace(hour=23, minute=59, second=59, microsecond=0).isoformat().replace("+00:00", "") + "Z"
 
     try:
@@ -576,7 +566,8 @@ elif page == "Ask":
                 tmp_path = f"entries/ask_voice_{uuid.uuid4()}.wav"
                 with open(tmp_path, "wb") as f:
                     f.write(voice_query.getbuffer())
-                transcription = process_voice_note(tmp_path, whisper_model)
+                transcription, whisper_ms = process_voice_note(tmp_path, whisper_model)
+                logger.info("Whisper transcription (ask): %d ms", whisper_ms)
                 Path(tmp_path).unlink(missing_ok=True)
                 st.session_state[text_key] = transcription or ""
             except Exception as e:
