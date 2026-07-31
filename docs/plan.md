@@ -42,6 +42,7 @@ Day shape: **AM = app, PM = eval/learning.**
 Binary must-hits: **#1 Tailscale live · #3 tags storing · eval numbers + findings list.** Soft: UI refactor. The real signal (the only time-gated thing): **tagged capture from the phone on ~4+ days.**
 
 **Friday gut-check:** *Did I capture tagged notes from my phone most days this week?* If yes, the week succeeded regardless of what else moved.
+ - two notes: 1. voice recording problem with tailscale broke frictionless 2. I took some notes but mostly from my laptop since during the day I am mostly sitting in front of computer and put my phone away to focus better
 
 **Explicitly NOT this week:** v2 tags *experience* / topic pages, LLM tag-suggest, chunking / extract-statements, tag backfill — all wait on the v2 design session.
 
@@ -105,6 +106,7 @@ Day shape: AM block = app, PM block = eval/learning (see [workflow.md](workflow.
 ### Technical
 - [ ] "Today" filters use UTC midnight — should be user-local timezone (Search presets, Journal day range, Mirror week math)
 - [ ] Ask-voice audio retention — currently transcribe-and-delete; revisit if ask_log shows garbled queries / re-asks during usage period (evidence-driven, see decisions.md 2026-07-14)
+- [ ] Persist `whisper_ms` to `ask_log` table — timing is now captured in `process_voice_note()` return value; small schema addition + migration needed to store it for analysis
 - [ ] Migrate to Supabase (PostgreSQL + pgvector — replaces both SQLite and ChromaDB)
 - [ ] Deploy to Streamlit Community Cloud
 - [ ] Migrate from Streamlit to a more flexible framework
@@ -132,6 +134,7 @@ Day shape: AM block = app, PM block = eval/learning (see [workflow.md](workflow.
 - [ ] Multi-user support
 
 ### Decisions for Later
+- [ ] Whisper API instead of local model ? (how will the performance change)
 - [ ] Hosting/deployment strategy (M5 — deployment research thread; candidate designs A/B/C/D in roadmap.md)
 - [ ] Cost model (sustainable monthly API spend?)
 - [ ] Open source strategy (MIT? contributions?)

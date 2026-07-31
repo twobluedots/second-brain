@@ -6,7 +6,7 @@ import streamlit as st
 
 from src.logger import logger
 from src.processing import process_voice_note
-from src.services import get_note_service, get_whisper_model
+from ui.services import get_note_service, get_whisper_model
 
 CATEGORY_COLOR = {
     "task":        ("rgba(30,136,229,0.12)",  "#1565C0"),

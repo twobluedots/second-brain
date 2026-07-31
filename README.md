@@ -16,7 +16,7 @@
 ```bash
 uv sync
 cp .env.example .env   # fill in your API keys
-uv run streamlit run src/app.py
+uv run streamlit run ui/app.py
 ```
 
 ## Tests
