@@ -827,4 +827,17 @@ DELETE FROM categories WHERE name NOT IN ('task','mood','journal','learning','re
 
 **Why:** Case-folding would be a silent auto-merge; tag rename/merge is already deferred to a future session — better to keep merging a deliberate later action than an automatic one now.
 
+---
+
+### 2026-07-31: [UI refactor] Separate ui/ from src/ at project root
+
+**What I decided:** All Streamlit code lives in `ui/` at the project root; `src/` is pure Python with zero Streamlit imports.
+
+**Why:** Mid-refactor we noticed `src/` was mixing business logic with Streamlit-specific code. Keeping them as siblings makes the boundary obvious — `src/` is independently testable without Streamlit installed.
+
+**Delta from spec:** Spec said `src/ui/components.py` and `src/pages/`. We went one level up: `ui/` at the root, `src/` stays clean.
+
+**When to reconsider:** If we migrate away from Streamlit — `ui/` becomes the swap-out layer.
+
+
 **Known gap:** Tags that predate the `tags` table (e.g. Journal's hardcoded `["interstitial", "journal"]`) aren't reachable in that entry's edit dialog until reused elsewhere on a new save — no backfill migration built this round.
