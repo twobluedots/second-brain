@@ -42,7 +42,7 @@ Day shape: **AM = app, PM = eval/learning.**
 Binary must-hits: **#1 Tailscale live · #3 tags storing · eval numbers + findings list.** Soft: UI refactor. The real signal (the only time-gated thing): **tagged capture from the phone on ~4+ days.**
 
 **Friday gut-check:** *Did I capture tagged notes from my phone most days this week?* If yes, the week succeeded regardless of what else moved.
- - two notes: 1. voice recording problem with tailscale broke frictionless 2. I took some notes but mostly from my laptop since during the day I am mostly sitting in front of computer and put my phone away to focus better
+ Notes: (1) Tailscale audio bug broke phone voice capture, fix tracked in bugs.md. (2) Most notes came from laptop; phone stays away during focus blocks by design.
 
 **Explicitly NOT this week:** v2 tags *experience* / topic pages, LLM tag-suggest, chunking / extract-statements, tag backfill — all wait on the v2 design session.
 
