@@ -1,300 +1,39 @@
-import streamlit as st
 import os
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import streamlit as st
+
 from src.logger import logger
-from src.notes_service import NoteService
-from src.rag.service import AskService
-from src.storage.storage import Storage
-from src.processing import load_model, process_voice_note
+from src.processing import process_voice_note
+from src.services import get_ask_service, get_note_service, get_whisper_model
+from src.ui.components import (
+    CATEGORY_COLOR,
+    add_image_dialog,
+    add_text_dialog,
+    add_voice_dialog,
+    edit_note_dialog,
+    render_entry_card,
+)
 from src.utils import time_filter_to_iso
 from config import DEFAULT_CATEGORIES, CATEGORY_MIRROR_LINES
 
 os.makedirs("entries", exist_ok=True)
 
-
-@st.cache_resource
-def get_service() -> NoteService:
-    return NoteService(Storage())
-
-@st.cache_resource
-def get_ask_service() -> AskService:
-    return AskService(get_service().storage)
-
-
-@st.cache_resource
-def get_whisper_model():
-    return load_model("base")
-
-
 try:
-    service = get_service()
+    get_note_service()
 except Exception as _service_init_error:
     logger.error("Service init failed: %s", _service_init_error)
     st.error(f"Failed to initialise storage: {_service_init_error}")
     st.info("Check that the data/ directory is writable and the database file is not corrupted.")
     st.stop()
 
-CATEGORY_COLOR = {
-    "task":        ("rgba(30,136,229,0.12)",  "#1565C0"),
-    "mood":        ("rgba(233,30,99,0.12)",   "#AD1457"),
-    "journal":     ("rgba(67,160,71,0.12)",   "#2E7D32"),
-    "learning":    ("rgba(142,36,170,0.12)",  "#6A1B9A"),
-    "reference":   ("rgba(251,140,0,0.12)",   "#E65100"),
-    "insight":     ("rgba(0,172,193,0.12)",   "#006064"),
-    "achievement": ("rgba(249,168,37,0.12)",  "#F57F17"),
-}
-
-
-def format_relative_time(created_at: str) -> str:
-    if not created_at:
-        return ""
-    try:
-        ts = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
-        now = datetime.now(timezone.utc)
-        delta = now - ts
-        if delta.days == 0:
-            return f"Today {ts.strftime('%H:%M')}"
-        elif delta.days == 1:
-            return f"Yesterday {ts.strftime('%H:%M')}"
-        elif delta.days < 7:
-            return ts.strftime("%a %H:%M")
-        else:
-            return ts.strftime("%b %d %H:%M")
-    except Exception:
-        return created_at[:10]
-
-
-def render_entry_card(entry: dict, key_prefix: str, show_category: bool = True):
-    category = entry.get("category", "")
-    bg, fg = CATEGORY_COLOR.get(category, ("rgba(0,0,0,0.08)", "#555555"))
-    with st.container(border=True):
-        if entry["content_type"] == "voice":
-            st.audio(entry["file_path"])
-            if entry.get("description"):
-                st.write(entry["description"])
-            if entry.get("content"):
-                st.caption(f"Transcription: {entry['content']}")
-        elif entry["content_type"] == "image":
-            st.image(entry["file_path"])
-            if entry.get("content"):
-                st.write(entry["content"])
-        else:
-            st.write(entry["content"])
-
-        if show_category:
-            col1, col2, col3 = st.columns([3, 5, 1])
-            with col1:
-                st.markdown(
-                    f'<span style="background:{bg};color:{fg};padding:2px 10px;'
-                    f'border-radius:12px;font-size:0.8em;border:1px solid {fg}40">'
-                    f'{category}</span>',
-                    unsafe_allow_html=True,
-                )
-            with col2:
-                st.caption(format_relative_time(entry.get("created_at", "")))
-            with col3:
-                if st.button("✏️", key=f"{key_prefix}_{entry['id']}"):
-                    st.session_state["_edit_target"] = {
-                        "entry_id": entry["id"],
-                        "current_category": category or "journal",
-                        "current_content": entry.get("content", ""),
-                        "current_tags": entry.get("tags") or [],
-                    }
-        else:
-            col_time, col_edit = st.columns([8, 1])
-            with col_time:
-                st.caption(format_relative_time(entry.get("created_at", "")))
-            with col_edit:
-                if st.button("✏️", key=f"{key_prefix}_{entry['id']}"):
-                    st.session_state["_edit_target"] = {
-                        "entry_id": entry["id"],
-                        "current_category": category or "journal",
-                        "current_content": entry.get("content", ""),
-                        "current_tags": entry.get("tags") or [],
-                    }
-
-        tags = entry.get("tags")
-        if tags:
-            pills_html = " ".join(
-                f'<span style="background:rgba(0,0,0,0.06);color:#444;padding:1px 8px;'
-                f'border-radius:10px;font-size:0.75em;border:1px solid rgba(0,0,0,0.15);margin-right:4px">'
-                f'#{tag}</span>'
-                for tag in tags
-            )
-            st.markdown(pills_html, unsafe_allow_html=True)
-
-page = st.sidebar.radio("Navigation", ["Capture", "Ask", "Search", "Recents", "Categories", "Journal", "Mirror"], label_visibility="collapsed")
-
-
-def save_file(file_obj, name: str) -> str:
-    file_ext = Path(file_obj.name).suffix
-    file_path = f"entries/{name}{file_ext}"
-    with open(file_path, "wb") as f:
-        f.write(file_obj.getbuffer())
-    return file_path
-
-
-@st.dialog("🎙️ Add Voice Note")
-def add_voice_dialog():
-    st.write("Record or upload a voice message:")
-    audio = st.audio_input("Voice input")
-
-    # Clear stale draft if dialog was dismissed without saving
-    if not audio:
-        st.session_state.pop("voice_draft_path", None)
-
-    # Auto-save file to disk as soon as recording finishes, before user hits Save
-    if audio and "voice_draft_path" not in st.session_state:
-        try:
-            st.session_state.voice_draft_path = save_file(audio, str(uuid.uuid4()))
-        except Exception as e:
-            st.error(f"Couldn't write audio file: {e}")
-
-    context = st.text_input("Optional context", placeholder="This audio is about...")
-    tags = st.multiselect("Tags", options=service.get_all_tags(), accept_new_options=True, default=[])
-    if st.button("Save"):
-        if audio:
-            try:
-                file_path = st.session_state.get("voice_draft_path") or save_file(audio, str(uuid.uuid4()))
-                with st.spinner("Transcribing..."):
-                    transcription, whisper_ms = process_voice_note(file_path, get_whisper_model())
-                    logger.info("Whisper transcription: %d ms", whisper_ms)
-                content = transcription or context or ""
-                description = context if transcription else None
-                with st.spinner("Saving..."):
-                    entry_id, category = service.save_note(
-                        content=content,
-                        content_type="voice",
-                        file_path=file_path,
-                        description=description,
-                        tags=tags,
-                    )
-                st.session_state.pop("voice_draft_path", None)
-                st.session_state.entries.append({"type": "voice", "audio": audio, "content": transcription or context, "category": category, "id": entry_id, "tags": tags})
-                st.rerun()
-            except Exception as e:
-                if st.session_state.get("voice_draft_path"):
-                    st.error(f"Couldn't save — audio file is safe on disk. Error: {e}")
-                else:
-                    st.error(f"Couldn't save — please try recording again. Error: {e}")
-        else:
-            st.error("Please record or upload audio first.")
-
-
-@st.dialog("📷 Add Image Note")
-def add_image_dialog():
-    st.write("Record or upload an image:")
-    image = st.camera_input("Take photo")
-    content = st.text_input("Optional context", placeholder="This image is about...")
-    tags = st.multiselect("Tags", options=service.get_all_tags(), accept_new_options=True, default=[])
-    if st.button("Save"):
-        if image:
-            try:
-                file_path = save_file(image, str(uuid.uuid4()))
-                with st.spinner("Saving..."):
-                    entry_id, category = service.save_note(content=content, content_type="image", file_path=file_path, tags=tags)
-                st.session_state.entries.append({"type": "image", "image": image, "content": content, "category": category, "id": entry_id, "tags": tags})
-                st.rerun()
-            except Exception as e:
-                st.error(f"Couldn't save — please try again. Error: {e}")
-        else:
-            st.error("Please take or upload a photo first.")
-
-
-@st.dialog("✏️ Add Text Note")
-def add_text_dialog():
-    st.write("What are you thinking?")
-    text = st.text_area("Enter text", placeholder="I think that...")
-    tags = st.multiselect("Tags", options=service.get_all_tags(), accept_new_options=True, default=[])
-    if st.button("Save"):
-        if text:
-            try:
-                with st.spinner("Saving..."):
-                    entry_id, category = service.save_note(content=text, content_type="text", tags=tags)
-                st.session_state.entries.append({"type": "text", "content": text, "category": category, "id": entry_id, "tags": tags})
-                st.rerun()
-            except Exception as e:
-                st.error(f"Couldn't save — please try again. Error: {e}")
-        else:
-            st.error("Text cannot be empty.")
-
-
-def _clear_edit_target():
-    st.session_state.pop("_edit_target", None)
-    st.session_state.pop("_confirm_delete", None)
-
-
-@st.dialog("Edit Note", on_dismiss=_clear_edit_target)
-def edit_note_dialog(entry_id: str, current_category: str, current_content: str, current_tags: list = None):
-    current_tags = current_tags or []
-    new_content = st.text_area("Content", value=current_content)
-    cats = service.get_categories()
-    idx = cats.index(current_category) if current_category in cats else 0
-    new_cat = st.selectbox("Category", cats, index=idx)
-    new_tags = st.multiselect("Tags", options=service.get_all_tags(), default=current_tags, accept_new_options=True)
-    if st.button("Save", use_container_width=True, type="secondary"):
-        ask_result = st.session_state.get("ask_result")
-        if new_content != current_content:
-            service.update_note(entry_id, new_content)
-            for e in st.session_state.get("entries", []):
-                if e.get("id") == entry_id:
-                    e["content"] = new_content
-                    break
-            if ask_result is not None:
-                for n in ask_result.notes:
-                    if n.get("id") == entry_id:
-                        n["content"] = new_content
-                        break
-        if new_cat != current_category:
-            service.override_category(entry_id, new_cat)
-            for e in st.session_state.get("entries", []):
-                if e.get("id") == entry_id:
-                    e["category"] = new_cat
-                    break
-            if ask_result is not None:
-                for n in ask_result.notes:
-                    if n.get("id") == entry_id:
-                        n["category"] = new_cat
-                        break
-        if new_tags != current_tags:
-            saved_tags = service.update_tags(entry_id, new_tags)
-            for e in st.session_state.get("entries", []):
-                if e.get("id") == entry_id:
-                    e["tags"] = saved_tags
-                    break
-            if ask_result is not None:
-                for n in ask_result.notes:
-                    if n.get("id") == entry_id:
-                        n["tags"] = saved_tags
-                        break
-        _clear_edit_target()
-        st.rerun()
-
-    if st.button("Delete", use_container_width=True, type="primary"):
-        st.session_state["_confirm_delete"] = entry_id
-
-    if st.session_state.get("_confirm_delete") == entry_id:
-        st.warning("Delete this note permanently?")
-        col_yes, col_no = st.columns(2)
-        with col_yes:
-            if st.button("Yes, delete", use_container_width=True, type="primary"):
-                service.delete_note(entry_id)
-                st.session_state["entries"] = [
-                    e for e in st.session_state.get("entries", []) if e.get("id") != entry_id
-                ]
-                ask_result = st.session_state.get("ask_result")
-                if ask_result is not None:
-                    ask_result.notes = [n for n in ask_result.notes if n.get("id") != entry_id]
-                _clear_edit_target()
-                st.rerun()
-        with col_no:
-            if st.button("Cancel", use_container_width=True):
-                st.session_state.pop("_confirm_delete", None)
-                st.rerun()
-
+page = st.sidebar.radio(
+    "Navigation",
+    ["Capture", "Ask", "Search", "Recents", "Categories", "Journal", "Mirror"],
+    label_visibility="collapsed",
+)
 
 if "entries" not in st.session_state:
     st.session_state.entries = []
@@ -313,28 +52,8 @@ if page == "Capture":
     if st.button("Add Text", width="stretch"):
         add_text_dialog()
 
-    if st.session_state.entries:
-        for idx, entry in enumerate(st.session_state.entries):
-            st.write(f"Note {idx + 1}:")
-            if entry["type"] == "voice":
-                st.audio(entry["audio"])
-                st.write(entry["content"])
-            elif entry["type"] == "image":
-                st.image(entry["image"])
-                st.write(entry["content"])
-            elif entry["type"] == "text":
-                st.markdown(entry["content"])
-            if entry.get("category"):
-                col1, col2 = st.columns([8, 1])
-                with col1:
-                    st.caption(f"category: {entry['category']}")
-                with col2:
-                    if st.button("✏️", key=f"edit_cap_{entry.get('id', idx)}"):
-                        st.session_state["_edit_target"] = {
-                            "entry_id": entry["id"],
-                            "current_category": entry["category"],
-                            "current_content": entry.get("content", ""),
-                        }
+    for entry in st.session_state.entries:
+        render_entry_card(entry, key_prefix="edit_cap")
 
 elif page == "Search":
     st.title("🔍 Search")
@@ -356,20 +75,20 @@ elif page == "Search":
             key="search_content_type",
         )
 
-    # Button click stores the search *intent*; rendering below recomputes from it on
-    # every rerun, so edits/deletes are always reflected (no stale results cache).
+    # Button click stores search intent; rendering recomputes on every rerun so
+    # edits/deletes are always reflected (no stale results cache).
     if st.button("Search"):
         st.session_state.search_params = {
             "query": query,
             "content_type": None if content_type_filter == "All" else content_type_filter.lower(),
             "date_preset": date_preset,
         }
-        st.session_state.search_log_pending = True  # log only the click, not every rerun
+        st.session_state.search_log_pending = True
 
     params = st.session_state.get("search_params")
     if params:
         try:
-            results = service.search(
+            results = get_note_service().search(
                 params["query"],
                 content_type=params["content_type"],
                 date_preset=params["date_preset"],
@@ -389,7 +108,7 @@ elif page == "Recents":
     st.title("📋 Recents")
 
     try:
-        recent_entries = service.get_recent(10)
+        recent_entries = get_note_service().get_recent(10)
     except Exception as e:
         st.error(f"Couldn't load recent notes: {e}")
         recent_entries = []
@@ -404,7 +123,7 @@ elif page == "Categories":
     if st.session_state.selected_category is None:
         st.title("Categories")
         try:
-            counts = service.get_category_counts()
+            counts = get_note_service().get_category_counts()
         except Exception as e:
             st.error(f"Couldn't load category counts: {e}")
             counts = {}
@@ -445,7 +164,7 @@ elif page == "Categories":
             )
 
         try:
-            cat_entries = service.get_by_category(selected, limit=50)
+            cat_entries = get_note_service().get_by_category(selected, limit=50)
         except Exception as e:
             st.error(f"Couldn't load entries: {e}")
             cat_entries = []
@@ -464,7 +183,7 @@ elif page == "Journal":
         if journal_entry:
             try:
                 with st.spinner("Saving..."):
-                    service.save_note(
+                    get_note_service().save_note(
                         content=journal_entry,
                         content_type="text",
                         category="journal",
@@ -478,10 +197,15 @@ elif page == "Journal":
             st.error("Journal entry cannot be empty.")
 
     today_start = time_filter_to_iso("today")
-    today_end = datetime.now(timezone.utc).replace(hour=23, minute=59, second=59, microsecond=0).isoformat().replace("+00:00", "") + "Z"
+    today_end = (
+        datetime.now(timezone.utc)
+        .replace(hour=23, minute=59, second=59, microsecond=0)
+        .isoformat()
+        .replace("+00:00", "") + "Z"
+    )
 
     try:
-        journal_entries = service.get_by_date_range(today_start, today_end)
+        journal_entries = get_note_service().get_by_date_range(today_start, today_end)
     except Exception as e:
         st.error(f"Couldn't load today's entries: {e}")
         journal_entries = []
@@ -494,12 +218,11 @@ elif page == "Mirror":
     st.title("Mirror")
 
     try:
-        stats = service.get_mirror_stats()
+        stats = get_note_service().get_mirror_stats()
     except Exception as e:
         st.error(f"Couldn't load stats: {e}")
         st.stop()
 
-    # --- A: Snapshot ---
     col_week, col_total = st.columns(2)
     with col_week:
         st.metric("This week", stats["week_count"])
@@ -522,7 +245,6 @@ elif page == "Mirror":
 
     st.divider()
 
-    # --- B: Consistency ---
     now_date = datetime.now(timezone.utc).date()
     dots = "".join(
         "●" if (now_date - timedelta(days=i)) in stats["active_days"] else "○"
@@ -533,7 +255,6 @@ elif page == "Mirror":
     if active_count > 0:
         st.caption(f"You showed up {active_count} of 7 days")
 
-    # --- D: Rediscovery ---
     rediscovery = stats["rediscovery"]
     if rediscovery:
         st.divider()
@@ -557,16 +278,15 @@ elif page == "Ask":
 
     voice_query = st.audio_input("Or ask with your voice", key=audio_key)
 
-    # Transcribe as soon as audio shows up, once, so it lands in the editable
-    # text field below instead of silently overriding what gets asked.
+    # Transcribe once on audio arrival so it lands in the editable text field
+    # instead of silently overriding what gets submitted.
     if voice_query is not None and not st.session_state.get(transcribed_flag):
         with st.spinner("Transcribing..."):
             try:
-                whisper_model = get_whisper_model()
                 tmp_path = f"entries/ask_voice_{uuid.uuid4()}.wav"
                 with open(tmp_path, "wb") as f:
                     f.write(voice_query.getbuffer())
-                transcription, whisper_ms = process_voice_note(tmp_path, whisper_model)
+                transcription, whisper_ms = process_voice_note(tmp_path, get_whisper_model())
                 logger.info("Whisper transcription (ask): %d ms", whisper_ms)
                 Path(tmp_path).unlink(missing_ok=True)
                 st.session_state[text_key] = transcription or ""
@@ -579,7 +299,6 @@ elif page == "Ask":
 
     if st.button("Ask", type="primary"):
         query = query_text.strip()
-
         if not query:
             st.warning("Type or record a question first.")
         else:
@@ -592,8 +311,6 @@ elif page == "Ask":
                     st.error("Something went wrong — please try again.")
                     st.stop()
 
-            # Stash the result so it survives the form reset below, then
-            # bump the widget version to clear the audio/text inputs.
             st.session_state.ask_query = query
             st.session_state.ask_result = result
             st.session_state.ask_form_version += 1
