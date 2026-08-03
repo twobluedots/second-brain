@@ -15,36 +15,45 @@
 **Design status:** the v2 *experience* is deferred to its own design session — the open question is cards vs. a built-up resource: process existing notes into a single whole-page story you update, or extract statements into a knowledge base of learnable bits. This chunk is not that. This chunk = **build the data engine (tag capture) + start the usage clock** so the material to answer the thesis starts accumulating now.
 
 ---
+## This Week (Mon 2026-08-04 → Fri 2026-08-08)
 
-## This Week (Mon 2026-07-27 → Fri 2026-07-31)
+**Week goal:** By Friday — the eval pipeline has produced its first retrieval and
+generation numbers with a written weaknesses list, and the repo is ready to open-source.
 
-Day shape: **AM = app, PM = eval/learning.**
+Day shape: **AM = eval, PM = build.**
 
-**Week goal:** By Friday, the machine that feeds the v2 bet is running — I'm capturing tagged notes from my phone daily, the docs are reorganized, and the eval pipeline gave me its first real numbers.
+### AM — eval track (in order)
+- [ ] RAGAS pipeline, part 1 — wire up context/retrieval metrics, run on the question set
+- [ ] Evaluate retrieval — read first scores, write down where retrieval is weak
+- [ ] RAGAS pipeline, part 2 — generation metrics (faithfulness, answer-relevancy)
+- [ ] Evaluate generation — read scores, write down where generation is weak
+- [ ] Chunking strategies — experiment (also feeds v2 multi-topic)
+- [ ] Further RAG-component experiments as time allows
+  - **Deliverable = a findings list:** concrete weaknesses ("retrieval misses X",
+    "generation drifts on Y"). Honest findings over exhaustive tuning.
 
-### AM — app track (in order)
-- [x] **Today — Tailscale** (~30 min) — get phone capture working. Starts the usage clock (feeds both v3 time-data and the v2 compound bet). Timebox: if it fights past ~1 hr, log it in bugs.md and move on.
-- [x] **Doc migration** — freeze plan.md, stand up this file, decisions.md entry. *(in progress)*
-- [x] **Tags — minimal capture** — tag field on the Entry model + SQLite + ~~ChromaDB metadata~~ (deferred — own `tags` table instead, see spec non-goals); free-text multi-tag input on the capture form (all three dialogs) + editable on existing notes; tags shown on note cards. **Rough UI is fine** — the point is data starts accumulating. Goes *before* the refactor so the clock starts early.
-  - Spec (15-min ratify before building): free-text user-defined · multi-tag per note · manual only (no LLM suggest yet) · stored SQLite + ~~Chroma metadata~~ (deferred) · **no backfill** of old notes (batch script later, once real topics are known).
-  - Built: [`design/tags-minimal-capture.md`](design/tags-minimal-capture.md). Deltas from spec logged in `decisions.md` (2026-07-29).
-- [x] **UI refactor** — the scoped bundle: multipage, `src/ui/components.py`, card de-dup, services factory, `date_preset`→service, `lru_cache` categorize, `whisper_ms`. Absorbs the rough tag UI into clean components. *(soft — carrying it to next week is fine.)*
-  - Spec: [`design/ui-refactor.md`](design/ui-refactor.md) — decisions already made (prior scoping session), written up + sequenced into 3 build groups.
+### PM — build track
+- [ ] **Bug-fix day** — Tailscale voice capture, timeboxed (~1–2 hr). If it fights past
+  the box, that's the signal that an always-on deployment is the real fix — schedule it
+  next week rather than patching further. (App was unreachable over the weekend; the
+  current setup depends on my machine being awake.)
+- [ ] **Pre-release pass — docs + config** — review tracked docs and README for anything
+  not meant to ship; tidy structure (merge the duplicate M1.1a storage docs)
+- [ ] **Safe config defaults** — restore XSRF/CORS protection in `.streamlit/config.toml`
+  (or document the override)
+- [ ] **Better tests** — add coverage for the RAG pipeline (currently thin)
+- [ ] **Flex** — implement any fix the eval surfaces
 
-### PM — eval track (all week)
-- [ ] **RAGAS self-study → `eval_ask.py` running** — read the docs *myself* (TestsetGenerator + the three metrics already in the file: faithfulness, answer_relevancy, ContextPrecisionWithoutReference), get it running on the 5 questions, read the first scores, and **write down where the pipeline is weak**. That findings list is the deliverable.
-
-### Background / parallel
-- [ ] **Daily capture *with tags*** once Tailscale's green — 2–3 notes/day on a couple of real topics. The new normal, not a task. This is me starting to *feed* the v2 bet.
-- [ ] **Reading (light):** topic / taxonomy / in-context learning — keep it as *reading*; it feeds next week's v2 design session, don't let it turn into building.
+### Background
+- [ ] Daily tagged capture continues — the usage clock for the v2 thesis
 
 ### Success check
-Binary must-hits: **#1 Tailscale live · #3 tags storing · eval numbers + findings list.** Soft: UI refactor. The real signal (the only time-gated thing): **tagged capture from the phone on ~4+ days.**
+Must-hits: **eval numbers + findings list · repo release-ready.**
+**Friday gut-check:** *Is the repo ready to open-source, and can I name what my retrieval
+and generation are each weak at?*
 
-**Friday gut-check:** *Did I capture tagged notes from my phone most days this week?* If yes, the week succeeded regardless of what else moved.
- Notes: (1) Tailscale audio bug broke phone voice capture, fix tracked in bugs.md. (2) Most notes came from laptop; phone stays away during focus blocks by design.
-
-**Explicitly NOT this week:** v2 tags *experience* / topic pages, LLM tag-suggest, chunking / extract-statements, tag backfill — all wait on the v2 design session.
+**Not this week:** full deployment (unless bug-fix day escalates it) · v2 experience
+design · parking lot items.
 
 ---
 
@@ -62,6 +71,36 @@ Template — every Sunday (newest entry on top; paste the finished week's task l
 ### Week of 2026-07-27 — pending (fill Sunday 2026-08-02)
 
 <!-- First check-in of v2. Verbal mid-week review already done 2026-07-27: v1 closeout basically complete (README, CI, bugs, ask-log); UI refactor + Tailscale carried; doc restructure + v2 thesis locked this session. -->
+
+### Archived task list — v2 week 1 (Mon 2026-07-27 → Fri 2026-07-31)
+
+Day shape: **AM = app, PM = eval/learning.**
+
+**Week goal:** By Friday, the machine that feeds the v2 bet is running — I'm capturing tagged notes from my phone daily, the docs are reorganized, and the eval pipeline gave me its first real numbers.
+
+#### AM — app track (in order)
+- [x] **Today — Tailscale** (~30 min) — get phone capture working. Starts the usage clock (feeds both v3 time-data and the v2 compound bet). Timebox: if it fights past ~1 hr, log it in bugs.md and move on.
+- [x] **Doc migration** — freeze plan.md, stand up this file, decisions.md entry. *(in progress)*
+- [x] **Tags — minimal capture** — tag field on the Entry model + SQLite + ~~ChromaDB metadata~~ (deferred — own `tags` table instead, see spec non-goals); free-text multi-tag input on the capture form (all three dialogs) + editable on existing notes; tags shown on note cards. **Rough UI is fine** — the point is data starts accumulating. Goes *before* the refactor so the clock starts early.
+  - Spec (15-min ratify before building): free-text user-defined · multi-tag per note · manual only (no LLM suggest yet) · stored SQLite + ~~Chroma metadata~~ (deferred) · **no backfill** of old notes (batch script later, once real topics are known).
+  - Built: [`design/tags-minimal-capture.md`](design/tags-minimal-capture.md). Deltas from spec logged in `decisions.md` (2026-07-29).
+- [x] **UI refactor** — the scoped bundle: multipage, `src/ui/components.py`, card de-dup, services factory, `date_preset`→service, `lru_cache` categorize, `whisper_ms`. Absorbs the rough tag UI into clean components. *(soft — carrying it to next week is fine.)*
+  - Spec: [`design/ui-refactor.md`](design/ui-refactor.md) — decisions already made (prior scoping session), written up + sequenced into 3 build groups.
+
+#### PM — eval track (all week)
+- [ ] (Carried over) **RAGAS self-study → `eval_ask.py` running** — read the docs *myself* (TestsetGenerator + the three metrics already in the file: faithfulness, answer_relevancy, ContextPrecisionWithoutReference), get it running on the 5 questions, read the first scores, and **write down where the pipeline is weak**. That findings list is the deliverable.
+
+#### Background / parallel
+- [x] **Daily capture *with tags*** once Tailscale's green — 2–3 notes/day on a couple of real topics. The new normal, not a task. This is me starting to *feed* the v2 bet.
+- [x] (Short discussion session) **Reading (light):** topic / taxonomy / in-context learning — keep it as *reading*; it feeds next week's v2 design session, don't let it turn into building.
+
+#### Success check
+Binary must-hits: **#1 Tailscale live · #3 tags storing · eval numbers + findings list.** Soft: UI refactor. The real signal (the only time-gated thing): **tagged capture from the phone on ~4+ days.**
+
+**Friday gut-check:** *Did I capture tagged notes from my phone most days this week?* If yes, the week succeeded regardless of what else moved.
+ Notes: (1) Tailscale audio bug broke phone voice capture, fix tracked in bugs.md. (2) Most notes came from laptop; phone stays away during focus blocks by design.
+
+**Explicitly NOT this week:** v2 tags *experience* / topic pages, LLM tag-suggest, chunking / extract-statements, tag backfill — all wait on the v2 design session.
 
 ### Archived task list — v1 final week (Mon 2026-07-13 → Fri 2026-07-17) — close v1
 
