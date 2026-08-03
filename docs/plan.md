@@ -18,19 +18,25 @@
 ## This Week (Mon 2026-08-04 → Fri 2026-08-08)
 
 **Week goal:** By Friday — the eval pipeline has produced its first retrieval and
-generation numbers with a written weaknesses list, and the repo is ready to open-source.
+generation numbers with a written weaknesses list. (Soft: repo release-ready.)
 
 Day shape: **AM = eval, PM = build.**
 
-### AM — eval track (in order)
-- [ ] RAGAS pipeline, part 1 — wire up context/retrieval metrics, run on the question set
-- [ ] Evaluate retrieval — read first scores, write down where retrieval is weak
-- [ ] RAGAS pipeline, part 2 — generation metrics (faithfulness, answer-relevancy)
-- [ ] Evaluate generation — read scores, write down where generation is weak
-- [ ] Chunking strategies — experiment (also feeds v2 multi-topic)
-- [ ] Further RAG-component experiments as time allows
-  - **Deliverable = a findings list:** concrete weaknesses ("retrieval misses X",
-    "generation drifts on Y"). Honest findings over exhaustive tuning.
+### AM — eval track (in order) — spec: [`design/eval-ask-grader.md`](design/eval-ask-grader.md)
+- [ ] RAGAS pipeline, part 1 — new `eval_ask_grader.py` grades **cached runner records**
+  (`eval_ask_runner.py` output, no live `ask()` calls); retrieval metric first
+  (ContextPrecisionWithoutReference). Retires the `eval_ask.py` monolith — don't reopen it.
+- [ ] Evaluate retrieval — read first scores next to the actual contexts, write down where retrieval is weak
+- [ ] RAGAS pipeline, part 2 — generation metrics (faithfulness, answer-relevancy).
+  This is the RAGAS *debugging* session — per-question runs, real exceptions, docs vs installed version.
+- [ ] Evaluate generation — read scores using the score-reading triangle in the spec, write down where generation is weak
+- [ ] *(stretch)* Semantic chunking — **learning session** (how it works; relation to topic
+  modeling / BERTopic / KeyBERT and to tags) + at most one small experiment if it fits.
+  Full chunking experiments stay parked (need Dataset 2 + v2 design session).
+- [ ] *(stretch)* Further RAG-component experiments as time allows
+
+**Deliverable of the track = a findings list:** concrete weaknesses ("retrieval misses X",
+"generation drifts on Y"). Honest findings over exhaustive tuning.
 
 ### PM — build track
 - [ ] **Bug-fix day** — Tailscale voice capture, timeboxed (~1–2 hr). If it fights past
@@ -48,9 +54,8 @@ Day shape: **AM = eval, PM = build.**
 - [ ] Daily tagged capture continues — the usage clock for the v2 thesis
 
 ### Success check
-Must-hits: **eval numbers + findings list · repo release-ready.**
-**Friday gut-check:** *Is the repo ready to open-source, and can I name what my retrieval
-and generation are each weak at?*
+Must-hit: **eval numbers + findings list.** Soft: repo release-ready (pre-release pass + config defaults).
+**Friday gut-check:** *Can I name what my retrieval and generation are each weak at?*
 
 **Not this week:** full deployment (unless bug-fix day escalates it) · v2 experience
 design · parking lot items.
@@ -68,7 +73,7 @@ Template — every Sunday (newest entry on top; paste the finished week's task l
 5. Energy/motivation level (1–5)?
 6. One thing I'm proud of this week:
 
-### Week of 2026-07-27 — pending (fill Sunday 2026-08-02)
+### Week of 2026-07-27 — filled 2026-08-03 → entry in the private check-in log (`docs/private/checkins.md`, untracked)
 
 <!-- First check-in of v2. Verbal mid-week review already done 2026-07-27: v1 closeout basically complete (README, CI, bugs, ask-log); UI refactor + Tailscale carried; doc restructure + v2 thesis locked this session. -->
 
@@ -120,7 +125,7 @@ Day shape: AM block = app, PM block = eval/learning (see [workflow.md](workflow.
 ---
 
 ## Rules for Myself
-1. **One hour a day.** Not zero, not five. One.
+1. **Show up daily.** One focused block minimum — more when it's flowing. Zero is the only failure.
 2. **Follow the plan.** If something isn't on the Current Focus, it goes in the parking lot.
 3. **Time-box decisions.** 15 minutes max to decide something technical. Pick and move.
 4. **Ugly is fine.** Working > pretty. Always.
