@@ -22,21 +22,17 @@ generation numbers with a written weaknesses list. (Soft: repo release-ready.)
 
 Day shape: **AM = eval, PM = build.**
 
-### AM — eval track (in order) — spec: [`design/eval-ask-grader.md`](design/eval-ask-grader.md)
-- [ ] RAGAS pipeline, part 1 — new `eval_ask_grader.py` grades **cached runner records**
-  (`eval_ask_runner.py` output, no live `ask()` calls); retrieval metric first
-  (ContextPrecisionWithoutReference). Retires the `eval_ask.py` monolith — don't reopen it.
-- [ ] Evaluate retrieval — read first scores next to the actual contexts, write down where retrieval is weak
-- [ ] RAGAS pipeline, part 2 — generation metrics (faithfulness, answer-relevancy).
-  This is the RAGAS *debugging* session — per-question runs, real exceptions, docs vs installed version.
-- [ ] Evaluate generation — read scores using the score-reading triangle in the spec, write down where generation is weak
-- [ ] *(stretch)* Semantic chunking — **learning session** (how it works; relation to topic
-  modeling / BERTopic / KeyBERT and to tags) + at most one small experiment if it fits.
-  Full chunking experiments stay parked (need Dataset 2 + v2 design session).
-- [ ] *(stretch)* Further RAG-component experiments as time allows
-
-**Deliverable of the track = a findings list:** concrete weaknesses ("retrieval misses X",
-"generation drifts on Y"). Honest findings over exhaustive tuning.
+### AM — eval track (in order)
+- [ ] **Grader build, retrieval metric (~1 hr, build)** — write eval_ask_grader.py: load one run_*.jsonl from experiments/artifacts/ask_eval/records/, build the RAGAS dataset, run ContextPrecisionWithoutReference only. Reruns cost judge calls only — never ask() calls.
+- [ ] Evaluate retrieval — read first scores, write down where retrieval is weak
+- [ ] **Generation metrics debugging (~1 hr, build/debug)** — add faithfulness + answer_relevancy to the grader. Run per-question, read the actual exceptions, check RAGAS version vs docs. Timebox: if RAGAS keeps fighting, note hand-rolling the metrics as the fallback — don't sink a third session into the library.
+- [ ] **Assessment session (~1–1.5 hr, eval)** — read scores next to answers and contexts, question by question; use the metric-triangle pattern (high faithfulness + low precision = bad retrieval; low faithfulness + high relevancy = model ignoring notes). Deliverable: the findings list — this closes the week's original eval commitment.
+- [ ] **(optional) — Metric internals** — dump faithfulness's statement decompositions, judge if they make sense for your note style; only if A3 leaves you distrusting the scores.
+- [ ] Close-out: decisions.md entry — runner/grader split, why the monolith failed. Retire eval_ask.py.
+- [ ] Chunking strategies — experiment (also feeds v2 multi-topic)
+- [ ] Further RAG-component experiments as time allows
+  - **Deliverable = a findings list:** concrete weaknesses ("retrieval misses X",
+    "generation drifts on Y"). Honest findings over exhaustive tuning.
 
 ### PM — build track
 - [ ] **Bug-fix day** — Tailscale voice capture, timeboxed (~1–2 hr). If it fights past
@@ -50,8 +46,11 @@ Day shape: **AM = eval, PM = build.**
 - [ ] **Better tests** — add coverage for the RAG pipeline (currently thin)
 - [ ] **Flex** — implement any fix the eval surfaces
 
-### Background
+### Background / Parallel
 - [ ] Daily tagged capture continues — the usage clock for the v2 thesis
+- [ ] **Semantic chunking (learning track)**
+  - [ ]  **Learning session (~1 hr)** — how semantic chunking works + relation to topic modeling/clustering (BERTopic, KeyBERT). Ends with wrap artifact in docs/learning/. 
+  - [ ] **Discussion session** — how chunking could fit the app + whether it feeds tags/topics/taxonomy. Output: a note feeding the v2 experience design session. Only after the session, decide if a design session is warranted. 
 
 ### Success check
 Must-hit: **eval numbers + findings list.** Soft: repo release-ready (pre-release pass + config defaults).
