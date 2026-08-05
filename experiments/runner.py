@@ -24,18 +24,20 @@ def init_db(db_path: Path) -> sqlite3.Connection:
     conn = sqlite3.connect(db_path)
     conn.execute("""
         CREATE TABLE IF NOT EXISTS results (
-            id            TEXT PRIMARY KEY,
-            run_id        TEXT,
-            created_at    TEXT,
-            dataset       TEXT,
-            embedding     TEXT,
-            retriever     TEXT,
-            n_results     INTEGER,
-            query         TEXT,
-            expected_id   TEXT,
-            retrieved_ids TEXT,
-            recall        REAL,
-            precision     REAL
+            id              TEXT PRIMARY KEY,
+            run_id          TEXT,
+            created_at      TEXT,
+            dataset         TEXT,
+            embedding       TEXT,
+            retriever       TEXT,
+            n_results       INTEGER,
+            query           TEXT,
+            expected_id     TEXT,
+            retrieved_ids   TEXT,
+            recall          REAL,
+            mrr             REAL,
+            ambiguous       INTEGER,
+            llm_judge_score REAL
         )
     """)
     conn.commit()
@@ -50,6 +52,12 @@ def run(config: dict):
     eval_path = DATASETS[dataset].parent / "eval_set.jsonl"
     eval_pairs = [json.loads(line) for line in open(eval_path) if line.strip()]
 
+    notes_path = DATASETS[dataset].parent / "notes.jsonl"
+    note_texts = {}
+    if notes_path.exists():
+        for line in open(notes_path):
+            n = json.loads(line)
+            note_texts[n["id"]] = n["text"]
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     runs_dir = RESULTS_DIR / "runs"
@@ -60,7 +68,7 @@ def run(config: dict):
 
     conn = init_db(db_path)
 
-    recalls, precisions = [], []
+    exact_recalls, exact_mrrs, ambiguous_judge_scores = [], [], []
 
     print(f"Run {run_id} | {dataset} | {config['embedding_model']} | {config['retriever']}")
     print(f"Evaluating {len(eval_pairs)} queries...\n")
@@ -69,12 +77,19 @@ def run(config: dict):
         for pair in eval_pairs:
             query = pair["query"]
             expected_id = pair["expected_note_id"]
+            ambiguous = pair.get("ambiguous", False)
 
             retrieved_ids = retrieve(query, config)
-            scores = grade(retrieved_ids, expected_id)
+            scores = grade(
+                retrieved_ids, expected_id,
+                query=query, ambiguous=ambiguous, note_texts=note_texts,
+            )
 
-            recalls.append(scores["recall"])
-            precisions.append(scores["precision"])
+            if ambiguous:
+                ambiguous_judge_scores.append(scores["llm_judge_score"])
+            else:
+                exact_recalls.append(scores["recall"])
+                exact_mrrs.append(scores["mrr"])
 
             row = {
                 "id": str(uuid.uuid4()),
@@ -88,26 +103,34 @@ def run(config: dict):
                 "expected_id": expected_id,
                 "retrieved_ids": retrieved_ids,
                 "recall": scores["recall"],
-                "precision": scores["precision"],
+                "mrr": scores["mrr"],
+                "ambiguous": 1 if ambiguous else 0,
+                "llm_judge_score": scores["llm_judge_score"],
             }
 
             conn.execute("""
                 INSERT INTO results VALUES
                 (:id,:run_id,:created_at,:dataset,:embedding,:retriever,
                  :n_results,:query,:expected_id,
-                 json(:retrieved_ids),:recall,:precision)
+                 json(:retrieved_ids),:recall,:mrr,:ambiguous,:llm_judge_score)
             """, {**row, "retrieved_ids": json.dumps(retrieved_ids)})
             conn.commit()
             jsonl_f.write(json.dumps(row) + "\n")
 
     conn.close()
 
-    avg_recall = sum(recalls) / len(recalls)
-    avg_precision = sum(precisions) / len(precisions)
+    n_exact = len(exact_recalls)
+    n_ambig = len(ambiguous_judge_scores)
 
     print(f"Results — run {run_id}")
-    print(f"  avg recall:    {avg_recall:.3f}")
-    print(f"  avg precision: {avg_precision:.3f}")
+    if n_exact:
+        avg_recall = sum(exact_recalls) / n_exact
+        avg_mrr = sum(exact_mrrs) / n_exact
+        print(f"  exact queries ({n_exact}):      avg recall {avg_recall:.3f}  avg mrr {avg_mrr:.3f}")
+    if n_ambig:
+        relevant = sum(1 for s in ambiguous_judge_scores if s > 0)
+        avg_judge = sum(ambiguous_judge_scores) / n_ambig
+        print(f"  ambiguous queries ({n_ambig}):  llm-judge {relevant}/{n_ambig} relevant  (avg {avg_judge:.2f})")
     print(f"  {jsonl_path.name} written")
     print("  logged to runs.db")
 

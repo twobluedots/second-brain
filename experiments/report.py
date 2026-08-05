@@ -57,7 +57,7 @@ def show(row: dict, notes: dict):
     print(f"\n{'─' * 65}")
     print(f"query    : {row['query']}")
     if rank:
-        print(f"result   : found at rank {rank}  (precision {row['precision']:.2f})")
+        print(f"result   : found at rank {rank}  (mrr {row['mrr']:.2f})")
     else:
         print("result   : NOT FOUND")
 
@@ -72,21 +72,27 @@ def show(row: dict, notes: dict):
 
 
 def print_summary(rows, label="SUMMARY"):
-    recalls = [r["recall"] for r in rows]
-    precisions = [r["precision"] for r in rows]
-    perfect = sum(1 for r in rows if r["precision"] == 1.0)
-    found_not_first = sum(1 for r in rows if r["recall"] == 1.0 and r["precision"] < 1.0)
-    missed = sum(1 for r in rows if r["recall"] == 0.0)
-    n = len(rows)
+    exact = [r for r in rows if r.get("mrr") is not None]
+    ambig = [r for r in rows if r.get("mrr") is None]
+    n = len(exact)
 
     print(f"\n{'═' * 65}")
     print(label)
-    print(f"  total queries  : {n}")
-    print(f"  ✓ rank 1       : {perfect}  ({perfect/n*100:.0f}%)")
-    print(f"  ~ found, not #1: {found_not_first}  ({found_not_first/n*100:.0f}%)")
-    print(f"  ✗ not found    : {missed}  ({missed/n*100:.0f}%)")
-    print(f"  avg recall     : {sum(recalls)/n:.3f}")
-    print(f"  avg precision  : {sum(precisions)/n:.3f}")
+    print(f"  total queries  : {len(rows)}  (exact: {n}, ambiguous: {len(ambig)})")
+    if n:
+        perfect = sum(1 for r in exact if r["mrr"] == 1.0)
+        found_not_first = sum(1 for r in exact if r["recall"] == 1.0 and r["mrr"] < 1.0)
+        missed = sum(1 for r in exact if r["recall"] == 0.0)
+        print(f"  ✓ rank 1       : {perfect}  ({perfect/n*100:.0f}%)")
+        print(f"  ~ found, not #1: {found_not_first}  ({found_not_first/n*100:.0f}%)")
+        print(f"  ✗ not found    : {missed}  ({missed/n*100:.0f}%)")
+        print(f"  avg recall     : {sum(r['recall'] for r in exact)/n:.3f}")
+        print(f"  avg mrr        : {sum(r['mrr'] for r in exact)/n:.3f}")
+    if ambig:
+        scores = [r["llm_judge_score"] for r in ambig if r.get("llm_judge_score") is not None]
+        if scores:
+            relevant = sum(1 for s in scores if s > 0)
+            print(f"  ambiguous judge: {relevant}/{len(ambig)} relevant  (avg {sum(scores)/len(scores):.2f})")
 
 
 def main():
@@ -107,8 +113,8 @@ def main():
         print(f"Run      : {args.run_id}")
         print(f"Config   : {rows[0]['dataset']} | {rows[0]['embedding']} | {rows[0]['retriever']}")
 
-        failures = [r for r in rows if r["recall"] == 0.0]
-        low = [r for r in rows if r["recall"] == 1.0 and r["precision"] < 1.0]
+        failures = [r for r in rows if r.get("recall") == 0.0]
+        low = [r for r in rows if r.get("recall") == 1.0 and r.get("mrr", 1.0) < 1.0]
 
         if args.all:
             for row in rows:
