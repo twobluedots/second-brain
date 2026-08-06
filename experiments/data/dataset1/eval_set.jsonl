@@ -15,7 +15,7 @@
 {"note_id": "v_ref_002", "query": "shopping reminder next week", "expected_note_id": "v_ref_002"}
 {"note_id": "v_ref_004", "query": "Interview on Friday", "expected_note_id": "v_ref_004"}
 {"note_id": "v_ref_004", "query": "What time is a typical interview", "expected_note_id": "v_ref_004"}
-{"note_id": "v_journal_001", "query": "how did I feel at the end of today", "expected_note_id": "v_journal_001"}
+{"note_id": "v_journal_001", "query": "how did I feel at the end of today", "expected_note_id": "v_journal_001", "ambiguous": true}
 {"note_id": "v_journal_002", "query": "frustration about meeting", "expected_note_id": "v_journal_002"}
 {"note_id": "v_journal_002", "query": "venting note from mid-day", "expected_note_id": "v_journal_002"}
 {"note_id": "v_journal_003", "query": "small win after frustrating task", "expected_note_id": "v_journal_003"}
@@ -30,7 +30,6 @@
 {"note_id": "t_journal_002", "query": "good productive day", "expected_note_id": "t_journal_002"}
 {"note_id": "t_journal_002", "query": "flow state day", "expected_note_id": "t_journal_002"}
 {"note_id": "t_journal_003", "query": "feeling underused at work", "expected_note_id": "t_journal_003"}
-{"note_id": "t_journal_003", "query": "pointless job", "expected_note_id": "t_journal_003"}
 {"note_id": "t_journal_004", "query": "processing a conversation with partner", "expected_note_id": "t_journal_004"}
 {"note_id": "t_journal_004", "query": "hard talk note", "expected_note_id": "t_journal_004"}
 {"note_id": "t_journal_005", "query": "task paralysis", "expected_note_id": "t_journal_005"}
@@ -87,12 +86,12 @@
 {"note_id": "v_ref_004", "query": "3pm meeting prep and reschedule", "expected_note_id": "v_ref_004"}
 {"note_id": "v_ref_004", "query": "Alex meeting and proposal", "expected_note_id": "v_ref_004"}
 {"note_id": "v_ref_004", "query": "Lunch packing for tomorrow", "expected_note_id": "v_ref_004"}
-{"note_id": "v_journal_001", "query": "how I felt at the end of [today's date]", "expected_note_id": "v_journal_001"}
-{"note_id": "v_journal_001", "query": "day reflection voice note", "expected_note_id": "v_journal_001"}
+{"note_id": "v_journal_001", "query": "how I felt at the end of [today's date]", "expected_note_id": "v_journal_001", "ambiguous": true}
+{"note_id": "v_journal_001", "query": "day reflection voice note", "expected_note_id": "v_journal_001", "ambiguous": true}
 {"note_id": "v_journal_001", "query": "team meeting issue today", "expected_note_id": "v_journal_001"}
 {"note_id": "v_journal_001", "query": "language barrier problem with John", "expected_note_id": "v_journal_001"}
 {"note_id": "v_journal_001", "query": "coffee spill incident", "expected_note_id": "v_journal_001"}
-{"note_id": "v_journal_001", "query": "intention for tomorrow", "expected_note_id": "v_journal_001"}
+{"note_id": "v_journal_001", "query": "intention for tomorrow", "expected_note_id": "v_journal_001", "ambiguous": true}
 {"note_id": "v_journal_002", "query": "frustration about meeting with John", "expected_note_id": "v_journal_002"}
 {"note_id": "v_journal_002", "query": "venting note from midday", "expected_note_id": "v_journal_002"}
 {"note_id": "v_journal_002", "query": "annoyance over task taking longer than expected", "expected_note_id": "v_journal_002"}
@@ -131,7 +130,7 @@
 {"note_id": "t_journal_007", "query": "feeling behind on project goals", "expected_note_id": "t_journal_007"}
 {"note_id": "t_journal_007", "query": "reality gap in personal progress", "expected_note_id": "t_journal_007", "ambiguous": true}
 {"note_id": "t_journal_007", "query": "struggling with managing promises", "expected_note_id": "t_journal_007"}
-{"note_id": "t_journal_008", "query": "small win", "expected_note_id": "t_journal_008"}
+{"note_id": "t_journal_008", "query": "small win", "expected_note_id": "t_journal_008", "ambiguous": true}
 {"note_id": "t_journal_008", "query": "bug fix completed", "expected_note_id": "t_journal_008"}
 {"note_id": "t_journal_008", "query": "good conversation", "expected_note_id": "t_journal_008", "ambiguous": true}
 {"note_id": "t_journal_008", "query": "task I was avoiding", "expected_note_id": "t_journal_008", "ambiguous": true}

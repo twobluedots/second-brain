@@ -1,20 +1,24 @@
 """
 Build or load a ChromaDB index for a (dataset, embedding_model) pair.
 
-Index path is derived from config so each combination gets its own persistent index.
-Re-running with the same config reuses the existing index without re-embedding.
+Index path is derived from config plus a hash of notes.jsonl's content, so a
+dataset edit always gets a fresh path (and rebuilds) instead of silently
+reusing a stale index. Re-running with unchanged notes.jsonl reuses the
+existing index without re-embedding.
 """
 
 import json
 from pathlib import Path
 import chromadb
 from experiments.config import DATASETS, EMBEDDING_MODELS, INDEXES_DIR
+from experiments.utils import hash_file
 
 
 def get_index_path(config: dict) -> Path:
     dataset = config["dataset"]
     embedding_model = config["embedding_model"]
-    return INDEXES_DIR / f"{dataset}__{embedding_model}"
+    notes_hash = hash_file(DATASETS[dataset])
+    return INDEXES_DIR / f"{dataset}__{notes_hash}__{embedding_model}"
 
 
 def load_or_build(config: dict) -> chromadb.Collection:

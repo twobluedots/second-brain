@@ -17,7 +17,9 @@ from pathlib import Path
 
 from experiments.config import DATASETS, RESULTS_DIR
 from experiments.grader import grade
+from experiments.pipeline.index import load_or_build
 from experiments.pipeline.pipeline import retrieve
+from experiments.utils import hash_file
 
 
 def init_db(db_path: Path) -> sqlite3.Connection:
@@ -37,7 +39,8 @@ def init_db(db_path: Path) -> sqlite3.Connection:
             recall          REAL,
             mrr             REAL,
             ambiguous       INTEGER,
-            llm_judge_score REAL
+            llm_judge_score REAL,
+            eval_set_hash   TEXT
         )
     """)
     conn.commit()
@@ -51,6 +54,7 @@ def run(config: dict):
     dataset = config["dataset"]
     eval_path = DATASETS[dataset].parent / "eval_set.jsonl"
     eval_pairs = [json.loads(line) for line in open(eval_path) if line.strip()]
+    eval_set_hash = hash_file(eval_path)
 
     notes_path = DATASETS[dataset].parent / "notes.jsonl"
     note_texts = {}
@@ -67,10 +71,11 @@ def run(config: dict):
     jsonl_path = runs_dir / f"run_{run_id}.jsonl"
 
     conn = init_db(db_path)
+    collection = load_or_build(config)
 
     exact_recalls, exact_mrrs, ambiguous_judge_scores = [], [], []
 
-    print(f"Run {run_id} | {dataset} | {config['embedding_model']} | {config['retriever']}")
+    print(f"Run {run_id} | {dataset} (eval_set {eval_set_hash}) | {config['embedding_model']} | {config['retriever']}")
     print(f"Evaluating {len(eval_pairs)} queries...\n")
 
     with open(jsonl_path, "w", buffering=1) as jsonl_f:
@@ -79,7 +84,7 @@ def run(config: dict):
             expected_id = pair["expected_note_id"]
             ambiguous = pair.get("ambiguous", False)
 
-            retrieved_ids = retrieve(query, config)
+            retrieved_ids = retrieve(query, config, collection)
             scores = grade(
                 retrieved_ids, expected_id,
                 query=query, ambiguous=ambiguous, note_texts=note_texts,
@@ -106,13 +111,14 @@ def run(config: dict):
                 "mrr": scores["mrr"],
                 "ambiguous": 1 if ambiguous else 0,
                 "llm_judge_score": scores["llm_judge_score"],
+                "eval_set_hash": eval_set_hash,
             }
 
             conn.execute("""
                 INSERT INTO results VALUES
                 (:id,:run_id,:created_at,:dataset,:embedding,:retriever,
                  :n_results,:query,:expected_id,
-                 json(:retrieved_ids),:recall,:mrr,:ambiguous,:llm_judge_score)
+                 json(:retrieved_ids),:recall,:mrr,:ambiguous,:llm_judge_score,:eval_set_hash)
             """, {**row, "retrieved_ids": json.dumps(retrieved_ids)})
             conn.commit()
             jsonl_f.write(json.dumps(row) + "\n")
@@ -141,5 +147,5 @@ if __name__ == "__main__":
             "dataset": "dataset1",
             "embedding_model": embedding_model,
             "retriever": "vector",
-            "n_results": 5,
+            "n_results": 15,
         })

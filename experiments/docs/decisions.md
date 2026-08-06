@@ -106,3 +106,57 @@ Things noticed while building that need attention. Actionable — revisit when e
 Templates: `v_ref_005`, `v_journal_004`, `t_journal_009`, `t_ref_005`, `t_insight_004`
 
 ---
+
+### 2026-08-03: Ask-service eval — split monolith, new `ask_eval/` folder
+
+**What I decided:** Retired the `eval_ask.py` monolith (single script that ran live `ask()` calls, then RAGAS scoring, then save — all in one pass) into a runner/grader split, and gave it its own folder: `experiments/ask_eval/` (`runner.py` done, `grader.py` next), instead of adding more flat `eval_ask_*` files to `experiments/`.
+
+**Why:**
+- `eval_ask.py` coupled an expensive step (5 live `ask()` calls) to a fragile one (RAGAS) with no save in between — every RAGAS crash meant re-running the pipeline calls from scratch.
+- `runner.py` now writes each record to disk immediately after calling `ask()`; grading against saved records is a separate, rerunnable step that costs judge calls only.
+- Separate folder, not flat files: this eval tests a different layer than the existing retrieval-only `runner.py`/`grader.py`/`report.py` (flat in `experiments/`) — full pipeline (retrieve + generate) against live `Storage`, reference-free RAGAS metrics (faithfulness, answer_relevancy) instead of ground-truth recall/mrr. `ask_eval/` makes that distinction visible in the file structure instead of implicit.
+
+---
+
+### 2026-08-06: More ambiguous tagging, `eval_set_hash` versioning, noisy print removed
+
+**What I decided:**
+- Tagged 5 more `eval_set.jsonl` rows `"ambiguous": true` (reusing the mechanism from 2026-07-22, not a rewrite or regeneration): `v_journal_001` — "how did I feel at the end of today", "how I felt at the end of [today's date]", "day reflection voice note", "intention for tomorrow"; `t_journal_008` — "small win"
+- Net: 156 → 155 queries
+- Added `eval_set_hash` (SHA-256 of `eval_set.jsonl`, first 8 hex chars) to `runner.py` — stored per row in `runs.db` and each run's JSONL, alongside the existing `created_at` timestamp
+- `runs.db` migrated once via `sqlite3 ... "ALTER TABLE results ADD COLUMN eval_set_hash TEXT;"` run directly from the shell — not added as migration code in `runner.py`. `CREATE TABLE` now includes the column for any future fresh DB, so no migration logic lives in the codebase.
+- Decided against a hash → human-readable-name mapping table
+
+
+**Why:**
+- Rule for ambiguous vs. genuine retrieval miss: if a query, read cold with no knowledge of which note it maps to, could honestly point at more than one note in the corpus → `ambiguous: true`. If it has a uniquely identifying detail and retrieval still ranks the wrong note above it → real retrieval defect, not a dataset problem.
+- Content hash over git-commit-hash for versioning: git-commit-hash only advances on commit, so a rerun before committing an edit would silently mislabel the run — more error-prone than a hash computed straight from file bytes.
+
+**Next:** cross-encoder reranker experiment over top-5/10 candidates, written as a swappable `rerank(query, candidate_ids) -> reordered_ids` function so a hosted API or LLM-as-reranker can be swapped in later without redoing the harness.
+
+---
+
+### 2026-08-06: Index rebuilt once per run, not once per query; index staleness fix
+
+**What I decided:**
+- `pipeline.retrieve()` now takes a pre-built `collection` instead of deriving it from `config` on every call. `runner.py` calls `pipeline.index.load_or_build(config)` once before the query loop and passes the same `collection` into every `retrieve()` call.
+- `get_index_path()` in `pipeline/index.py` now includes a hash of `notes.jsonl`'s content in the index directory name (`{dataset}__{notes_hash}__{embedding_model}`), not just dataset + embedding model names.
+- Extracted `hash_file()` (SHA-256, first 8 hex chars) into a new `experiments/utils.py`, shared by `eval_set_hash` (in `runner.py`) and the new `notes_hash` (in `pipeline/index.py`) — one helper instead of duplicating it per file.
+
+**Why:**
+- `retrieve()` was calling `load_or_build()` — a fresh `chromadb.PersistentClient` + `get_or_create_collection()` — on every single query (155× per run). The index already existed on disk so no re-embedding happened, but every call paid full reconnect overhead for no reason. Building the collection once per run and reusing the handle fixes this.
+- Separately, and more importantly: the old index path (`{dataset}__{embedding_model}`) was derived only from names, never from `notes.jsonl`'s content. Editing `notes.jsonl` (e.g. regenerating notes) would silently leave `load_or_build()` returning the *stale* on-disk collection forever — `collection.count() > 0` short-circuits before ever checking whether the notes actually changed. That's a silent correctness bug, not just noise: retrieval would be scored as if against current notes while actually querying old embeddings. Hashing `notes.jsonl` into the path means any edit produces a path the code has never seen, so it rebuilds automatically.
+- Old index directories (`dataset1__default`, `dataset1__bge-large`) are now orphaned under the new naming — left on disk, not deleted; harmless and cheap to leave.
+
+---
+
+### 2026-08-06: `report.py` fixed for ambiguous/llm-judge rows
+
+**What I decided:**
+- `show()`/`main()` predated the 2026-07-22 ambiguous/llm-judge addition — ambiguous rows (`recall: None`) never matched the `failures`/`low` filters, so they never showed in the report; `show()` mislabeled them `"NOT FOUND"` with no judge score. Fixed: `show()` branches on `ambiguous`, `main()` adds an `ambig_bad` section.
+- Removed hardcoded `retrieved_ids[:5]` (was truncating runs with `n_results > 5`), hardcoded `NOTES_FILE` path (now resolved from the run's own `dataset` field via `config.DATASETS`), and wrapped `Tee`'s stdout redirect in `try/finally`.
+- Added `eval_set_hash` to the report header.
+
+**Open question:** still reaches into `rows[0]["dataset"]` for a run-level value — considered normalizing into a separate run-metadata record, undecided, revisit later.
+
+---
