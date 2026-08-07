@@ -841,3 +841,21 @@ DELETE FROM categories WHERE name NOT IN ('task','mood','journal','learning','re
 
 
 **Known gap:** Tags that predate the `tags` table (e.g. Journal's hardcoded `["interstitial", "journal"]`) aren't reachable in that entry's edit dialog until reused elsewhere on a new save — no backfill migration built this round.
+
+---
+
+### 2026-08-07: Pre-commit hook — ruff lint only, no ruff-format yet
+
+**What I decided:** Added `.pre-commit-config.yaml` running `ruff check --fix` on commit (`pre-commit` as a new dev dependency, hook installed via `pre-commit install`). Left `ruff-format` out for now, and did not add `pytest` to the hook.
+
+**Why:**
+- Triggered by a CI lint failure caused by an unused import that should've been caught before commit
+- `ruff-format` has never been run on this repo — a first pass reformatted 34 files (~900 lines) with no functional change, which is too noisy to fold into an unrelated change
+- `pytest` in a pre-commit hook slows down every commit; CI already runs the full suite
+
+**Trade-offs:**
+- ✅ Catches the exact class of failure (unused imports, undefined names) before it reaches CI
+- ✅ Fast — lint only, no test run, no reformat
+- ❌ Formatting stays inconsistent repo-wide until a dedicated formatting pass is done
+
+**When to reconsider:** Do a one-time `ruff format .` across the repo as its own standalone commit, then add `ruff-format` back to the hook so formatting stays consistent going forward.
