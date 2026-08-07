@@ -160,3 +160,37 @@ Templates: `v_ref_005`, `v_journal_004`, `t_journal_009`, `t_ref_005`, `t_insigh
 **Open question:** still reaches into `rows[0]["dataset"]` for a run-level value — considered normalizing into a separate run-metadata record, undecided, revisit later.
 
 ---
+
+### 2026-08-07: `ask_eval/grader.py` — generation metrics added (faithfulness, answer_relevancy)
+
+**What I decided:**
+- Added `Faithfulness` + `AnswerRelevancy` (both from `ragas.metrics.collections`, same family as the existing `ContextRelevance`/`ContextUtilization`) to `grader.py`, bringing it to four metrics total — two retrieval-side, two generation-side, scored per record and averaged.
+- `AnswerRelevancy` needs an embeddings model; used `OpenAIEmbeddings(model="text-embedding-3-small")` — cheap, and reuses the `AsyncOpenAI()` client already in the file. (`ragas.embeddings.embedding_factory` exists but is deprecated in favor of the provider classes.)
+- Bumped the judge LLM's `max_tokens` from RAGAS's default 1024 to 4096. Faithfulness decomposes the response into atomic claims before verifying each against the contexts — a synthesis-style answer (e.g. "most important wins from last month," pulling from several notes) decomposes into enough claims that the JSON output was hitting the old cap and getting truncated mid-response.
+- Both new metrics reuse the existing "skip if `response` is empty" guard already in place for `context_utilization` — nothing to judge on an empty response.
+- Also corrected `eval-ask-grader.md`'s session-1 naming (it said `ContextPrecisionWithoutReference`, actually shipped as `ContextRelevance` + `ContextUtilization`) and updated its "done when" checklist from three metrics to four.
+
+**Why:** this is Session 3 of the plan already ratified in `eval-ask-grader.md` (2026-08-03) — read retrieval and generation scores together (the "triangle" table in that doc) to tell whether a bad answer is a retrieval failure or a generation failure, rather than tuning either side blind.
+
+**Known limitation, not yet acted on:** faithfulness's claim-level entailment check verifies individual facts against context, but doesn't judge synthesis/ranking quality (e.g. "most important" is a selection judgment, not a checkable claim) — suspect it under-evaluates multi-note aggregation answers. `eval-ask-grader.md`'s parking lot already earmarked dumping the decomposition output to check this before touching any judge prompts.
+
+**Next (separate session):** run the full pipeline (`collector.py` → `grader.py`) — this session only re-ran `grader.py` against an already-cached records file, not a fresh `ask()` collection pass. Also: parallelize `grader.py`'s scoring (currently fully sequential — ~20 serial judge calls per 5-question run) with `asyncio.gather` + a concurrency cap.
+
+---
+
+### 2026-08-07: `runner.py` fixed for a real end-to-end run; queries extracted to file
+
+**What I decided:**
+- `collector.collect()` now returns `out_path`; `runner.py` now `await`s `grade()` (it's `async def`, was called bare before) and gained the missing `__main__` guard — `runner.py` wasn't actually runnable end-to-end before this.
+- Queries moved from a hardcoded list into `experiments/ask_eval/queries/<query_set>.json`, one file per set.
+- Renamed `QUESTIONS`/"questions" → `queries`/`query_set` — matches `ask(query, storage)`'s own vocabulary.
+- `run_id` is now the same UTC timestamp as the output filename, instead of a separate uuid.
+- Deleted `experiments/eval_ask.py` — same hardcoded query list, no longer needed.
+
+**Why:** two silent failures (missing return, missing await) meant `runner.py` never actually worked end-to-end despite looking fine.
+
+**Verified:** live run via `python -m experiments.ask_eval.runner` — scores saved to `run_20260807T174052.json`.
+
+**Next:** wire up `query_set` selection via CLI once a second set exists.
+
+---

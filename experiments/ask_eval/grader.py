@@ -1,0 +1,181 @@
+"""
+Grades cached ask() pipeline records with RAGAS context metrics.
+
+Loads a records file written by the collector, scores each record's
+retrieved contexts for relevance and utilization, prints per-record and
+average scores, and saves everything to experiments/artifacts/ask_eval/scores.
+Rerunnable — a rerun costs judge calls only, never live ask() calls.
+
+Usage:
+  python -m experiments.ask_eval.grader
+"""
+
+import asyncio
+import json
+from pathlib import Path
+
+from openai import AsyncOpenAI
+from ragas.embeddings import OpenAIEmbeddings
+from ragas.llms import llm_factory
+from ragas.metrics.collections import (
+    AnswerRelevancy,
+    ContextRelevance,
+    ContextUtilization,
+    Faithfulness,
+)
+
+from experiments.ask_eval.collector import RECORDS_DIR
+
+SCORES_DIR = Path(__file__).parent.parent / "artifacts/ask_eval/scores"
+JUDGE_MODEL = "gpt-4o-mini"
+EMBEDDING_MODEL = "text-embedding-3-small"
+
+
+def _latest_records_path() -> Path:
+    candidates = sorted(RECORDS_DIR.glob("run_*.jsonl"))
+    if not candidates:
+        raise FileNotFoundError(f"No run_*.jsonl files found in {RECORDS_DIR}")
+    return candidates[-1]
+
+
+def _load_records(records_path: Path) -> list[dict]:
+    if not records_path.exists():
+        raise FileNotFoundError(f"Records file not found: {records_path}")
+    with open(records_path) as f:
+        records = [json.loads(line) for line in f if line.strip()]
+    if not records:
+        raise ValueError(f"Records file is empty: {records_path}")
+    return records
+
+
+def _average(values: list[float | None]) -> float | None:
+    scored = [v for v in values if v is not None]
+    return sum(scored) / len(scored) if scored else None
+
+
+def _fmt(value: float | None) -> str:
+    return f"{value:.2f}" if value is not None else "n/a"
+
+
+async def _score_record(
+    record: dict, relevance_scorer, utilization_scorer, faithfulness_scorer, answer_relevancy_scorer
+) -> dict:
+    question = record["user_input"]
+    contexts = [c["content"] for c in record["retrieved_contexts"]]
+    response = record.get("response") or ""
+
+    try:
+        relevance = await relevance_scorer.ascore(
+            user_input=question,
+            retrieved_contexts=contexts,
+        )
+        relevance_score = relevance.value
+    except Exception as e:
+        print(f"  [warn] context_relevance failed for {question!r}: {e}")
+        relevance_score = None
+
+    # These three all judge the response — nothing to judge when there's no
+    # response, so skip them rather than let RAGAS error.
+    if not response:
+        utilization_score = None
+        faithfulness_score = None
+        answer_relevancy_score = None
+    else:
+        try:
+            utilization = await utilization_scorer.ascore(
+                user_input=question,
+                response=response,
+                retrieved_contexts=contexts,
+            )
+            utilization_score = utilization.value
+        except Exception as e:
+            print(f"  [warn] context_utilization failed for {question!r}: {e}")
+            utilization_score = None
+
+        try:
+            faithfulness = await faithfulness_scorer.ascore(
+                user_input=question,
+                response=response,
+                retrieved_contexts=contexts,
+            )
+            faithfulness_score = faithfulness.value
+        except Exception as e:
+            print(f"  [warn] faithfulness failed for {question!r}: {e}")
+            faithfulness_score = None
+
+        try:
+            answer_relevancy = await answer_relevancy_scorer.ascore(
+                user_input=question,
+                response=response,
+            )
+            answer_relevancy_score = answer_relevancy.value
+        except Exception as e:
+            print(f"  [warn] answer_relevancy failed for {question!r}: {e}")
+            answer_relevancy_score = None
+
+    return {
+        "user_input": question,
+        "response": response,
+        "context_relevance": relevance_score,
+        "context_utilization": utilization_score,
+        "faithfulness": faithfulness_score,
+        "answer_relevancy": answer_relevancy_score,
+        "retrieved_contexts": contexts,
+    }
+
+
+async def grade(records_path: Path | None = None) -> None:
+    if records_path is None:
+        records_path = _latest_records_path()
+    records = _load_records(records_path)
+
+    client = AsyncOpenAI()
+    llm = llm_factory(JUDGE_MODEL, client=client, max_tokens=4096)
+    embeddings = OpenAIEmbeddings(client=client, model=EMBEDDING_MODEL)
+    relevance_scorer = ContextRelevance(llm=llm)
+    utilization_scorer = ContextUtilization(llm=llm)
+    faithfulness_scorer = Faithfulness(llm=llm)
+    answer_relevancy_scorer = AnswerRelevancy(llm=llm, embeddings=embeddings)
+
+    results = [
+        await _score_record(
+            record, relevance_scorer, utilization_scorer, faithfulness_scorer, answer_relevancy_scorer
+        )
+        for record in records
+    ]
+
+    for r in results:
+        print(
+            f"relevance={_fmt(r['context_relevance'])}  "
+            f"utilization={_fmt(r['context_utilization'])}  "
+            f"faithfulness={_fmt(r['faithfulness'])}  "
+            f"answer_relevancy={_fmt(r['answer_relevancy'])}  "
+            f"{r['user_input']}"
+        )
+
+    avg_relevance = _average([r["context_relevance"] for r in results])
+    avg_utilization = _average([r["context_utilization"] for r in results])
+    avg_faithfulness = _average([r["faithfulness"] for r in results])
+    avg_answer_relevancy = _average([r["answer_relevancy"] for r in results])
+    print(
+        f"\nAVERAGE  relevance={_fmt(avg_relevance)}  utilization={_fmt(avg_utilization)}  "
+        f"faithfulness={_fmt(avg_faithfulness)}  answer_relevancy={_fmt(avg_answer_relevancy)}"
+    )
+
+    SCORES_DIR.mkdir(parents=True, exist_ok=True)
+    scores_path = SCORES_DIR / f"{records_path.stem}.json"
+    scores_path.write_text(json.dumps({
+        "records_path": str(records_path),
+        "results": results,
+        "aggregate": {
+            "context_relevance": avg_relevance,
+            "context_utilization": avg_utilization,
+            "faithfulness": avg_faithfulness,
+            "answer_relevancy": avg_answer_relevancy,
+        },
+    }, indent=2))
+    print(f"Saved to: {scores_path}")
+
+
+if __name__ == "__main__":
+    asyncio.run(grade())
