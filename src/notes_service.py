@@ -24,24 +24,25 @@ class NoteService:
         description: str = None,
         category: str = None,
         tags: list = None,
-    ) -> tuple[str, str]:
-        """Categorize then save. Returns (entry_id, category)."""
+    ) -> tuple[str, str, list[str]]:
+        """Categorize then save. Returns (entry_id, category, normalized_tags)."""
         ai_suggested = None
         if not category:
             ai_suggested = categorize(content or "", description=description)
             category = ai_suggested
+        normalized_tags = normalize_tags(tags or [])
         entry = Entry(
             content=content,
             content_type=content_type,
             category=category,
-            tags=normalize_tags(tags or []),
+            tags=normalized_tags,
             file_path=file_path,
             description=description,
         )
         entry_id = self.storage.save(entry)
         self.storage.log_category_event(entry_id, ai_suggested, category, event_type='ai_assignment')
         logger.info("Note saved: %s (type=%s, category=%s)", entry_id, content_type, category)
-        return entry_id, category
+        return entry_id, category, normalized_tags
 
     def update_note(self, entry_id: str, content: str) -> None:
         self.storage.update(entry_id, {"content": content})

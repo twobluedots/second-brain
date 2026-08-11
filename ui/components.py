@@ -131,7 +131,7 @@ def add_voice_dialog():
                 content = transcription or context or ""
                 description = context if transcription else None
                 with st.spinner("Saving..."):
-                    entry_id, category = service.save_note(
+                    entry_id, category, saved_tags = service.save_note(
                         content=content,
                         content_type="voice",
                         file_path=file_path,
@@ -146,7 +146,7 @@ def add_voice_dialog():
                     "description": description,
                     "category": category,
                     "id": entry_id,
-                    "tags": tags or [],
+                    "tags": saved_tags,
                     "created_at": None,
                 })
                 st.rerun()
@@ -171,7 +171,7 @@ def add_image_dialog():
             try:
                 file_path = save_file(image, str(uuid.uuid4()))
                 with st.spinner("Saving..."):
-                    entry_id, category = service.save_note(
+                    entry_id, category, saved_tags = service.save_note(
                         content=content, content_type="image", file_path=file_path, tags=tags
                     )
                 st.session_state.entries.append({
@@ -180,7 +180,7 @@ def add_image_dialog():
                     "content": content,
                     "category": category,
                     "id": entry_id,
-                    "tags": tags or [],
+                    "tags": saved_tags,
                     "created_at": None,
                 })
                 st.rerun()
@@ -200,7 +200,7 @@ def add_text_dialog():
         if text:
             try:
                 with st.spinner("Saving..."):
-                    entry_id, category = service.save_note(
+                    entry_id, category, saved_tags = service.save_note(
                         content=text, content_type="text", tags=tags
                     )
                 st.session_state.entries.append({
@@ -208,7 +208,7 @@ def add_text_dialog():
                     "content": text,
                     "category": category,
                     "id": entry_id,
-                    "tags": tags or [],
+                    "tags": saved_tags,
                     "created_at": None,
                 })
                 st.rerun()

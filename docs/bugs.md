@@ -6,6 +6,15 @@ Bugs discovered but not yet prioritized for fixing. Update status as things chan
 
 ---
 
+## [FIXED] Multi-word tags not hyphenated in UI after Add dialogs (session-state/DB desync)
+- **Where**: `ui/components.py` — `add_voice_dialog` (~line 123-149), `add_image_dialog` (~line 168-183), `add_text_dialog` (~line 198-211); surfaced as a crash in `edit_note_dialog` (line 234)
+- **What**: Typing a multi-word tag like "system design" via the Add dialogs' `st.multiselect(..., accept_new_options=True)` saved correctly to the DB as "system-design", but the *raw* unhyphenated string was what got appended to `st.session_state.entries`. Later clicking Edit on that note threw `StreamlitAPIException: The default value 'system design' is not part of the options` — `current_tags` (from stale session state) no longer matched `get_all_tags()` (from DB, already hyphenated).
+- **When found**: 2026-08-11 · **Fixed**: 2026-08-11
+- **Cause**: `NoteService.save_note()` (`src/notes_service.py:37`) normalizes tags internally via `normalize_tags()` (`src/tags.py`) before persisting, but only returned `(entry_id, category)` — the normalized list was never handed back to the caller. The three Add dialogs then appended the *raw* multiselect output (`tags or []`) into `st.session_state.entries` instead of the normalized value actually saved to the DB. `edit_note_dialog` didn't have this bug — it uses `service.update_tags()`'s return value, which *is* normalized (`src/notes_service.py:50-54`).
+- **Fix**: `save_note()` now also returns the normalized tags (`tuple[str, str, list[str]]`); the three Add dialogs use that return value instead of the raw `tags` variable when appending to `st.session_state.entries`.
+
+---
+
 ## [OPEN] Audio recording broken when accessing via Tailscale (non-localhost)
 - **Where**: Ask page → `st.audio_input` widget
 - **What**: Widget shows "An error has occurred, please try again." — browser blocks microphone access entirely; no Python traceback
