@@ -45,7 +45,13 @@ def collect(query_set: str = "default") -> Path:
             print(f"  Q: {q}")
             result = ask(q, storage)
             notes = [
-                {"id": n.get("id"), "content": n.get("content")}
+                {
+                    "id": n.get("id"),
+                    "content": n.get("content"),
+                    "created_at": n.get("created_at"),
+                    "category": n.get("category"),
+                    "content_type": n.get("content_type"),
+                }
                 for n in result.notes if n.get("content")
             ]
 

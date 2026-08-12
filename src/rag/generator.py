@@ -10,8 +10,6 @@ from config import ANTHROPIC_MODEL, OPENAI_MODEL
 from src.logger import logger
 from src.rag.analyzer import QueryPlan
 
-_NOTE_TRUNCATE = 400  # chars per note in the prompt context
-
 _INTENT_INSTRUCTIONS = {
     "factual": "Answer in 1-2 sentences. Cite which note the answer came from (e.g. 'In your note from [date]...'). If the notes don't contain a clear answer, say so honestly.",
     "qa":      "Answer in a short paragraph. Reference the notes where relevant.",
@@ -21,16 +19,24 @@ _INTENT_INSTRUCTIONS = {
 _SYSTEM = "You are a personal assistant answering questions from a user's private notes. Be concise and specific. Never invent information not present in the notes."
 
 
+def format_note(note: Dict) -> str:
+    """Formats a single note as '{date} | {category} | {content_type}\\n{content}'.
+
+    Single source of truth for "what does the model see for one note" — used
+    both for the generation prompt below and for eval context strings
+    (experiments/ask_eval), so the two can't drift apart (see docs/bugs.md,
+    2026-08-12: eval was checking faithfulness against context text that was
+    missing the date the generator actually had).
+    """
+    content = (note.get("content") or "").strip()
+    date = (note.get("created_at") or "")[:16]
+    category = note.get("category") or "uncategorized"
+    note_type = note.get("content_type") or "text"
+    return f"{date} | {category} | {note_type}\n{content}"
+
+
 def _format_notes(notes: List[Dict]) -> str:
-    lines = []
-    for i, note in enumerate(notes, 1):
-        content = (note.get("content") or "").strip()
-        if len(content) > _NOTE_TRUNCATE:
-            content = content[:_NOTE_TRUNCATE] + "..."
-        date = (note.get("created_at") or "")[:10]
-        category = note.get("category") or "uncategorized"
-        note_type = note.get("content_type") or "text"
-        lines.append(f"[{i}] {date} | {category} | {note_type}\n{content}")
+    lines = [f"[{i}] {format_note(note)}" for i, note in enumerate(notes, 1)]
     return "\n---\n".join(lines)
 
 
@@ -54,10 +60,8 @@ def _plain_fallback(notes: List[Dict]) -> str:
     """Used when all LLM providers fail — format notes as a readable list."""
     lines = ["Here are the most relevant notes I found:\n"]
     for note in notes:
-        date = (note.get("created_at") or "")[:10]
+        date = (note.get("created_at") or "")[:16]
         content = (note.get("content") or "").strip()
-        if len(content) > _NOTE_TRUNCATE:
-            content = content[:_NOTE_TRUNCATE] + "..."
         lines.append(f"• {date}: {content}")
     return "\n".join(lines)
 

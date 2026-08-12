@@ -6,6 +6,22 @@ Bugs discovered but not yet prioritized for fixing. Update status as things chan
 
 ---
 
+## [OPEN] Note truncation (400-char cap) removed from generator without a replacement strategy
+- **Where**: `src/rag/generator.py` — was `_NOTE_TRUNCATE = 400`, used in `_format_notes()` and `_plain_fallback()`
+- **What**: Each retrieved note's content was hard-truncated to 400 chars (mid-sentence) before being shown to the generation LLM. Deactivated 2026-08-12 while fixing eval context handling — removed rather than kept as an unexamined constant.
+- **Why flagged**: actual note lengths (`data/database/entries.db`): median 126, mean 249, only 21/189 (~11%) exceed 400 chars, but max is 4550 — so it rarely triggers, but when it does it silently drops up to ~4150 chars for a token savings that's negligible against modern context windows.
+- **Fix path**: revisit with a deliberate strategy (larger cap, summarization, or truncate-with-notice) instead of no cap at all — no cap is fine short-term but could get costly if note volume/length grows.
+
+---
+
+## [OPEN] `created_at` date/time extracted via fixed-width string slicing (`[:10]`, `[:16]`) instead of parsing
+- **Where**: `src/rag/generator.py` — `format_note()`, `_plain_fallback()`
+- **What**: Dates pulled from `created_at` (e.g. `'2025-10-30T15:55:20.567449Z'`) via `[:16]` instead of `datetime.fromisoformat(...)`.
+- **Why flagged**: safe today since `storage.py` always writes fixed-width ISO timestamps, but it's a positional assumption with no validation — a future change to timestamp generation or format would silently produce a garbled date instead of erroring.
+- **Fix path**: `datetime.fromisoformat(note["created_at"].replace("Z", "+00:00")).strftime("%Y-%m-%dT%H:%M")` (same pattern already used in `storage.py:192`).
+
+---
+
 ## [FIXED] Multi-word tags not hyphenated in UI after Add dialogs (session-state/DB desync)
 - **Where**: `ui/components.py` — `add_voice_dialog` (~line 123-149), `add_image_dialog` (~line 168-183), `add_text_dialog` (~line 198-211); surfaced as a crash in `edit_note_dialog` (line 234)
 - **What**: Typing a multi-word tag like "system design" via the Add dialogs' `st.multiselect(..., accept_new_options=True)` saved correctly to the DB as "system-design", but the *raw* unhyphenated string was what got appended to `st.session_state.entries`. Later clicking Edit on that note threw `StreamlitAPIException: The default value 'system design' is not part of the options` — `current_tags` (from stale session state) no longer matched `get_all_tags()` (from DB, already hyphenated).

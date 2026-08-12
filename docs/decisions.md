@@ -859,3 +859,18 @@ DELETE FROM categories WHERE name NOT IN ('task','mood','journal','learning','re
 - ❌ Formatting stays inconsistent repo-wide until a dedicated formatting pass is done
 
 **When to reconsider:** Do a one-time `ruff format .` across the repo as its own standalone commit, then add `ruff-format` back to the hook so formatting stays consistent going forward.
+
+---
+
+### 2026-08-12: `format_note()` extracted — generation prompt and eval context now share one formatter
+
+**What I decided:** Added `format_note(note) -> str` to `src/rag/generator.py`, returning `"{date} | {category} | {content_type}\n{content}"`. `_format_notes()` (prompt building) now calls it per note instead of inlining the formatting; `experiments/ask_eval/collector.py` now captures `created_at`/`category`/`content_type` alongside `id`/`content` in `retrieved_contexts`; `experiments/ask_eval/grader.py` builds its RAGAS context strings via the same `format_note()` instead of raw note content.
+
+**Why:** eval's `retrieved_contexts` only ever carried `id` + `content`, so the RAGAS faithfulness judge was checking date claims in generated answers (e.g. "On July 28...") against context text that never had a date in it — even though the generator legitimately saw the date, since `_format_notes()` includes it in the actual prompt. Two separate implementations of "what does the model see for a note" had drifted apart. One shared formatter removes the drift risk, not just this one instance of it.
+
+**Also decided in the same pass:**
+- `_NOTE_TRUNCATE` (400-char per-note cap in the prompt) removed — see `docs/bugs.md` (OPEN) for the reasoning and revisit plan.
+- `format_note()` includes time, not just date (`created_at[:16]` → `"2026-07-28T14:32"`), since same-day notes need to be distinguishable.
+- Date/time is still extracted via fixed-width string slicing, same as before — flagged as OPEN in `docs/bugs.md` rather than fixed now, to keep this change scoped to the drift fix.
+
+**Verified:** faithfulness average went from ~0.73 to 1.0 on a fresh run. More directly — same question ("most important wins from last month"), the judge's own reasoning flipped from *"context does not specify a timeline of July 2026"* (verdict 0) to *"context explicitly states the user exercised and ate healthy on July 28"* (verdict 1), confirming the missing-date context was the cause, not something else.
