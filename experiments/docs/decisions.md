@@ -194,3 +194,38 @@ Templates: `v_ref_005`, `v_journal_004`, `t_journal_009`, `t_ref_005`, `t_insigh
 **Next:** wire up `query_set` selection via CLI once a second set exists.
 
 ---
+
+### 2026-08-07: `ask_eval/grader.py` — scoring parallelized
+
+**What I decided:** `_score_record` now fires its up-to-4 metric calls concurrently via a new `_run_scorer()` wrapper + `asyncio.gather`, instead of awaiting them one at a time; `grade()` gathers all records concurrently too instead of a sequential list comprehension. A single `asyncio.Semaphore(5)`, shared across every scorer call, caps concurrency; `_run_scorer()` also keeps the existing per-metric try/except-and-warn behavior intact.
+
+**Why:** the sequential version made up to ~20 serial judge calls for a 5-question run, each a multi-second round trip — nothing about one record's or one metric's score depends on another, so full concurrency is safe; the semaphore exists only to avoid OpenAI rate limits, not a data dependency.
+
+**Verified:** live run via `python -m experiments.ask_eval.grader` completed in ~34s, no rate-limit errors, no truncation warnings.
+
+---
+
+### 2026-08-12: `ask_eval/grader.py` — latest-records selection fixed; scores no longer overwrite on rerun
+
+**What I decided:** `_latest_records_path()` now filters to `run_<timestamp>.jsonl` via regex and picks the max by parsed timestamp, instead of a plain filename sort. `grade()`'s output is now `{records_stem}__graded_{graded_at}.json` instead of `{records_stem}.json`.
+
+**Why:** a leftover file from the old id-based naming scheme (`run_a4a47cee.jsonl`) sorted *after* every timestamp-named file (letters > digits lexicographically), so the plain sort was silently picking a stale Aug-3 file as "latest" over an actually-newer Aug-7 one — `runner.py` was unaffected (passes `collect()`'s path straight to `grade()`), but `grader.py`'s standalone rerun path wasn't. Considered sorting by file mtime instead; rejected as opaque filesystem metadata when the real timestamp is already in the filename. Separately, output-filename-per-records-file meant every rerun overwrote the last score — no way to compare before/after a grader change without manually renaming files first.
+
+**Not done:** left the pre-existing `run_a4a47cee*` files as-is, no cleanup.
+
+---
+
+### 2026-08-12: `ask_eval/grader.py` — faithfulness decomposition surfaced
+
+**What I decided:**
+- Added `FaithfulnessWithDecomposition`, a subclass of ragas's `Faithfulness` that calls the same private steps `ascore()` already runs internally (`_create_statements`, `_create_verdicts`, `_compute_score`) but returns the per-claim breakdown alongside the score instead of discarding it — no extra LLM calls.
+- Returns `(MetricResult, decomposition)` from a new `ascore_with_decomposition()` method rather than stashing state on `self`, since one scorer instance is shared across concurrent record scoring (`asyncio.Semaphore(5)`) — an instance attribute would have been a race condition.
+- Each record's result now carries `faithfulness_decomposition`: a list of `{statement, verdict, reason}`, saved to `scores/*.json` alongside the existing scores. Not printed to console — JSON only, to keep console output short.
+
+**Why:** this is the parking-lot item flagged in the 2026-08-07 entry above — faithfulness's claim-level check doesn't judge synthesis/ranking quality, and the decomposition needed to be inspectable before touching any judge prompts to fix that.
+
+**Approach considered and rejected:** reimplementing statement generation + NLI verdicting ourselves, for full control and no coupling to ragas internals. Rejected — duplicates logic ragas already runs, risks drifting from ragas's actual scoring behavior, and the private methods used here (`_create_statements`, `_create_verdicts`, `_compute_score`) are stable enough for an eval script. Tradeoff: an unannounced ragas upgrade could rename or change these methods; worth a quick check next time `ragas` version bumps in `pyproject.toml`.
+
+**Next:** actually read the decomposition output from a real run to check the aggregation-judgment hypothesis, then decide whether it warrants a judge-prompt change.
+
+---

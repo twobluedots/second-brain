@@ -12,6 +12,8 @@ Usage:
 
 import asyncio
 import json
+import re
+from datetime import datetime, timezone
 from pathlib import Path
 
 from openai import AsyncOpenAI
@@ -23,19 +25,51 @@ from ragas.metrics.collections import (
     ContextUtilization,
     Faithfulness,
 )
+from ragas.metrics.result import MetricResult
 
 from experiments.ask_eval.collector import RECORDS_DIR
+from src.rag.generator import format_note
 
 SCORES_DIR = Path(__file__).parent.parent / "artifacts/ask_eval/scores"
 JUDGE_MODEL = "gpt-4o-mini"
 EMBEDDING_MODEL = "text-embedding-3-small"
 
 
+class FaithfulnessWithDecomposition(Faithfulness):
+    """Faithfulness that also surfaces the atomic claims and per-claim NLI verdicts.
+
+    ragas's Faithfulness.ascore() computes these internally (statement
+    generation, then NLI verdict per statement) but only returns the
+    collapsed ratio. We reuse those same private steps so we don't pay for
+    extra LLM calls. Returned directly (not stashed on self) since one
+    scorer instance is shared across concurrent record scoring.
+    """
+
+    async def ascore_with_decomposition(
+        self, user_input: str, response: str, retrieved_contexts: list[str]
+    ) -> tuple[MetricResult, list[dict]]:
+        statements = await self._create_statements(user_input, response)
+        if not statements:
+            return MetricResult(value=float("nan")), []
+
+        context_str = "\n".join(retrieved_contexts)
+        verdicts = await self._create_verdicts(statements, context_str)
+        decomposition = [
+            {"statement": s.statement, "verdict": s.verdict, "reason": s.reason} for s in verdicts.statements
+        ]
+
+        score = self._compute_score(verdicts)
+        return MetricResult(value=float(score)), decomposition
+
+
+_RUN_ID_RE = re.compile(r"run_(\d{8}T\d{6})\.jsonl$")
+
+
 def _latest_records_path() -> Path:
-    candidates = sorted(RECORDS_DIR.glob("run_*.jsonl"))
+    candidates = [p for p in RECORDS_DIR.glob("run_*.jsonl") if _RUN_ID_RE.search(p.name)]
     if not candidates:
-        raise FileNotFoundError(f"No run_*.jsonl files found in {RECORDS_DIR}")
-    return candidates[-1]
+        raise FileNotFoundError(f"No run_<timestamp>.jsonl files found in {RECORDS_DIR}")
+    return max(candidates, key=lambda p: _RUN_ID_RE.search(p.name).group(1))
 
 
 def _load_records(records_path: Path) -> list[dict]:
@@ -57,61 +91,72 @@ def _fmt(value: float | None) -> str:
     return f"{value:.2f}" if value is not None else "n/a"
 
 
+async def _run_scorer(semaphore: asyncio.Semaphore, name: str, question: str, coro) -> float | None:
+    async with semaphore:
+        try:
+            result = await coro
+            return result.value
+        except Exception as e:
+            print(f"  [warn] {name} failed for {question!r}: {e}")
+            return None
+
+
+async def _run_faithfulness_scorer(
+    semaphore: asyncio.Semaphore, question: str, coro
+) -> tuple[float | None, list[dict]]:
+    async with semaphore:
+        try:
+            result, decomposition = await coro
+            return result.value, decomposition
+        except Exception as e:
+            print(f"  [warn] faithfulness failed for {question!r}: {e}")
+            return None, []
+
+
 async def _score_record(
-    record: dict, relevance_scorer, utilization_scorer, faithfulness_scorer, answer_relevancy_scorer
+    record: dict,
+    relevance_scorer,
+    utilization_scorer,
+    faithfulness_scorer,
+    answer_relevancy_scorer,
+    semaphore: asyncio.Semaphore,
 ) -> dict:
     question = record["user_input"]
-    contexts = [c["content"] for c in record["retrieved_contexts"]]
+    contexts = [format_note(c) for c in record["retrieved_contexts"]]
     response = record.get("response") or ""
 
-    try:
-        relevance = await relevance_scorer.ascore(
-            user_input=question,
-            retrieved_contexts=contexts,
-        )
-        relevance_score = relevance.value
-    except Exception as e:
-        print(f"  [warn] context_relevance failed for {question!r}: {e}")
-        relevance_score = None
+    relevance_task = _run_scorer(
+        semaphore, "context_relevance", question,
+        relevance_scorer.ascore(user_input=question, retrieved_contexts=contexts),
+    )
 
     # These three all judge the response — nothing to judge when there's no
     # response, so skip them rather than let RAGAS error.
     if not response:
-        utilization_score = None
-        faithfulness_score = None
-        answer_relevancy_score = None
+        relevance_score = await relevance_task
+        utilization_score = faithfulness_score = answer_relevancy_score = None
+        faithfulness_decomposition = []
     else:
-        try:
-            utilization = await utilization_scorer.ascore(
-                user_input=question,
-                response=response,
-                retrieved_contexts=contexts,
-            )
-            utilization_score = utilization.value
-        except Exception as e:
-            print(f"  [warn] context_utilization failed for {question!r}: {e}")
-            utilization_score = None
-
-        try:
-            faithfulness = await faithfulness_scorer.ascore(
-                user_input=question,
-                response=response,
-                retrieved_contexts=contexts,
-            )
-            faithfulness_score = faithfulness.value
-        except Exception as e:
-            print(f"  [warn] faithfulness failed for {question!r}: {e}")
-            faithfulness_score = None
-
-        try:
-            answer_relevancy = await answer_relevancy_scorer.ascore(
-                user_input=question,
-                response=response,
-            )
-            answer_relevancy_score = answer_relevancy.value
-        except Exception as e:
-            print(f"  [warn] answer_relevancy failed for {question!r}: {e}")
-            answer_relevancy_score = None
+        utilization_task = _run_scorer(
+            semaphore, "context_utilization", question,
+            utilization_scorer.ascore(user_input=question, response=response, retrieved_contexts=contexts),
+        )
+        faithfulness_task = _run_faithfulness_scorer(
+            semaphore, question,
+            faithfulness_scorer.ascore_with_decomposition(
+                user_input=question, response=response, retrieved_contexts=contexts
+            ),
+        )
+        answer_relevancy_task = _run_scorer(
+            semaphore, "answer_relevancy", question,
+            answer_relevancy_scorer.ascore(user_input=question, response=response),
+        )
+        (
+            relevance_score,
+            utilization_score,
+            (faithfulness_score, faithfulness_decomposition),
+            answer_relevancy_score,
+        ) = await asyncio.gather(relevance_task, utilization_task, faithfulness_task, answer_relevancy_task)
 
     return {
         "user_input": question,
@@ -119,6 +164,7 @@ async def _score_record(
         "context_relevance": relevance_score,
         "context_utilization": utilization_score,
         "faithfulness": faithfulness_score,
+        "faithfulness_decomposition": faithfulness_decomposition,
         "answer_relevancy": answer_relevancy_score,
         "retrieved_contexts": contexts,
     }
@@ -134,15 +180,16 @@ async def grade(records_path: Path | None = None) -> None:
     embeddings = OpenAIEmbeddings(client=client, model=EMBEDDING_MODEL)
     relevance_scorer = ContextRelevance(llm=llm)
     utilization_scorer = ContextUtilization(llm=llm)
-    faithfulness_scorer = Faithfulness(llm=llm)
+    faithfulness_scorer = FaithfulnessWithDecomposition(llm=llm)
     answer_relevancy_scorer = AnswerRelevancy(llm=llm, embeddings=embeddings)
 
-    results = [
-        await _score_record(
-            record, relevance_scorer, utilization_scorer, faithfulness_scorer, answer_relevancy_scorer
+    semaphore = asyncio.Semaphore(5)
+    results = await asyncio.gather(*[
+        _score_record(
+            record, relevance_scorer, utilization_scorer, faithfulness_scorer, answer_relevancy_scorer, semaphore
         )
         for record in records
-    ]
+    ])
 
     for r in results:
         print(
@@ -163,7 +210,8 @@ async def grade(records_path: Path | None = None) -> None:
     )
 
     SCORES_DIR.mkdir(parents=True, exist_ok=True)
-    scores_path = SCORES_DIR / f"{records_path.stem}.json"
+    graded_at = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
+    scores_path = SCORES_DIR / f"{records_path.stem}__graded_{graded_at}.json"
     scores_path.write_text(json.dumps({
         "records_path": str(records_path),
         "results": results,
