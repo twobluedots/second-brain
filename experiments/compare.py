@@ -22,7 +22,7 @@ def load_run(run_id: str) -> dict:
 
 
 def rank_of(row: dict) -> int | None:
-    if row["recall"] == 0.0:
+    if row.get("ambiguous") or row["recall"] == 0.0:
         return None
     return row["retrieved_ids"].index(row["expected_id"]) + 1
 
@@ -48,6 +48,8 @@ def main():
         b_row = b_by_query.get(q)
         if not a_row or not b_row:
             continue
+        if a_row.get("ambiguous"):
+            continue
         ra = rank_of(a_row)
         rb = rank_of(b_row)
 
@@ -71,8 +73,18 @@ def main():
         return {"n": n, "rank1": rank1, "found": found, "missed": missed,
                 "avg_recall": avg_r, "avg_mrr": avg_m}
 
+    def ambig_summary(by_query: dict) -> dict | None:
+        scores = [r["llm_judge_score"] for r in by_query.values()
+                  if r.get("ambiguous") and r.get("llm_judge_score") is not None]
+        if not scores:
+            return None
+        relevant = sum(1 for s in scores if s > 0)
+        return {"n": len(scores), "relevant": relevant, "avg": sum(scores) / len(scores)}
+
     sa = summary(a_by_query)
     sb = summary(b_by_query)
+    aa = ambig_summary(a_by_query)
+    ab = ambig_summary(b_by_query)
 
     W = 38
     print(f"\n{'═' * (W * 2 + 3)}")
@@ -88,6 +100,9 @@ def main():
     row("✗ not found", f"{sa['missed']}  ({sa['missed']/sa['n']*100:.0f}%)", f"{sb['missed']}  ({sb['missed']/sb['n']*100:.0f}%)")
     row("avg recall", f"{sa['avg_recall']:.3f}", f"{sb['avg_recall']:.3f}")
     row("avg mrr", f"{sa['avg_mrr']:.3f}", f"{sb['avg_mrr']:.3f}")
+    if aa and ab:
+        row("ambig judge", f"{aa['relevant']}/{aa['n']}  (avg {aa['avg']:.2f})",
+            f"{ab['relevant']}/{ab['n']}  (avg {ab['avg']:.2f})")
 
     def fmt_rank(r):
         return "✗" if r is None else f"#{r}"

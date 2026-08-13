@@ -40,16 +40,31 @@ def init_db(db_path: Path) -> sqlite3.Connection:
             mrr             REAL,
             ambiguous       INTEGER,
             llm_judge_score REAL,
-            eval_set_hash   TEXT
+            eval_set_hash   TEXT,
+            reranker        TEXT
         )
     """)
     conn.commit()
     return conn
 
 
+def build_run_id(config: dict, now: datetime) -> str:
+    parts = [
+        config["dataset"],
+        config["embedding_model"],
+        config["retriever"],
+        f"n{config.get('n_results', 5)}",
+    ]
+    if config.get("reranker"):
+        parts.append(config["reranker"])
+    parts.append(now.strftime("%Y%m%d-%H%M%S"))
+    return "_".join(parts)
+
+
 def run(config: dict):
-    run_id = str(uuid.uuid4())[:8]
-    created_at = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(timezone.utc)
+    created_at = now.isoformat()
+    run_id = build_run_id(config, now)
 
     dataset = config["dataset"]
     eval_path = DATASETS[dataset].parent / "eval_set.jsonl"
@@ -75,7 +90,8 @@ def run(config: dict):
 
     exact_recalls, exact_mrrs, ambiguous_judge_scores = [], [], []
 
-    print(f"Run {run_id} | {dataset} (eval_set {eval_set_hash}) | {config['embedding_model']} | {config['retriever']}")
+    reranker_label = config.get("reranker", "none")
+    print(f"Run {run_id} | {dataset} (eval_set {eval_set_hash}) | {config['embedding_model']} | {config['retriever']} | reranker={reranker_label}")
     print(f"Evaluating {len(eval_pairs)} queries...\n")
 
     with open(jsonl_path, "w", buffering=1) as jsonl_f:
@@ -84,7 +100,7 @@ def run(config: dict):
             expected_id = pair["expected_note_id"]
             ambiguous = pair.get("ambiguous", False)
 
-            retrieved_ids = retrieve(query, config, collection)
+            retrieved_ids = retrieve(query, config, collection, note_texts)
             scores = grade(
                 retrieved_ids, expected_id,
                 query=query, ambiguous=ambiguous, note_texts=note_texts,
@@ -112,13 +128,14 @@ def run(config: dict):
                 "ambiguous": 1 if ambiguous else 0,
                 "llm_judge_score": scores["llm_judge_score"],
                 "eval_set_hash": eval_set_hash,
+                "reranker": config.get("reranker", ""),
             }
 
             conn.execute("""
                 INSERT INTO results VALUES
                 (:id,:run_id,:created_at,:dataset,:embedding,:retriever,
                  :n_results,:query,:expected_id,
-                 json(:retrieved_ids),:recall,:mrr,:ambiguous,:llm_judge_score,:eval_set_hash)
+                 json(:retrieved_ids),:recall,:mrr,:ambiguous,:llm_judge_score,:eval_set_hash,:reranker)
             """, {**row, "retrieved_ids": json.dumps(retrieved_ids)})
             conn.commit()
             jsonl_f.write(json.dumps(row) + "\n")
@@ -148,4 +165,5 @@ if __name__ == "__main__":
             "embedding_model": embedding_model,
             "retriever": "vector",
             "n_results": 15,
+            "reranker": "bge-reranker-base",
         })

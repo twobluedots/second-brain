@@ -15,6 +15,12 @@ EMBEDDING_MODELS = {
     # "openai_small": ...,         # add when OpenAI key is available
 }
 
+# Reranker name → cross-encoder model id (lazy-loaded in pipeline/rerank.py)
+RERANKERS = {
+    "cross-encoder-ms-marco": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+    "bge-reranker-base": "BAAI/bge-reranker-base",
+}
+
 # Where generated indexes and results are stored
 ARTIFACTS_DIR = ROOT / "artifacts"
 INDEXES_DIR = ARTIFACTS_DIR / "indexes"
