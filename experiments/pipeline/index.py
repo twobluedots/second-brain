@@ -17,7 +17,7 @@ from experiments.utils import hash_file
 def get_index_path(config: dict) -> Path:
     dataset = config["dataset"]
     embedding_model = config["embedding_model"]
-    notes_hash = hash_file(DATASETS[dataset])
+    notes_hash = hash_file(DATASETS[dataset]["notes"])
     return INDEXES_DIR / f"{dataset}__{notes_hash}__{embedding_model}"
 
 
@@ -38,7 +38,7 @@ def load_or_build(config: dict) -> chromadb.Collection:
 
     # Index doesn't exist yet — build it
     print(f"Building index: {index_path.name} ...")
-    notes_path = DATASETS[config["dataset"]]
+    notes_path = DATASETS[config["dataset"]]["notes"]
     notes = [json.loads(line) for line in open(notes_path) if line.strip()]
 
     collection.add(

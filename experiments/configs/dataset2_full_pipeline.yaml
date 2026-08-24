@@ -1,0 +1,9 @@
+# Full pipeline: live intent classification, live retrieval, generation over
+# whatever the retriever actually surfaced.
+- dataset: dataset2
+  embedding_model: bge-large
+  retriever: vector
+  n_results: 10
+  reranker: null
+  stages: [intent, retrieval, generation]
+  generation_metrics: [context_relevance, context_utilization, faithfulness, answer_relevancy]

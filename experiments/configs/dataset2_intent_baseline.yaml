@@ -1,0 +1,3 @@
+# Intent-only: no retrieval, just scores analyze_query() against ask-row ground truth
+- dataset: dataset2
+  stages: [intent]

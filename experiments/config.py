@@ -3,10 +3,25 @@ from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunct
 
 ROOT = Path(__file__).parent
 
-# Dataset name → notes.jsonl path
+# Dataset name → {notes path, eval_set path}
 DATASETS = {
-    "dataset1": ROOT / "data/dataset1/notes.jsonl",
+    "dataset1": {
+        "notes": ROOT / "data/dataset1/notes.jsonl",
+        "eval_set": ROOT / "data/dataset1/eval_set.jsonl",
+    },
+    "dataset2": {
+        "notes": ROOT / "data/dataset2/notes2.jsonl",
+        "eval_set": ROOT / "data/dataset2/eval_set2.jsonl",
+    },
 }
+
+# Run-config YAML files (experiments/configs/*.yaml) are resolved against this
+CONFIGS_DIR = ROOT / "configs"
+
+# dataset2's notes carry a `days_ago` offset instead of an absolute date.
+# Fixed reference point (dataset generated 2026-08-21) so time-filter grading
+# stays reproducible regardless of when the eval is actually run.
+DATASET2_ANCHOR_DATE = "2026-08-21"
 
 # Embedding model name → ChromaDB embedding function (None = ChromaDB default)
 EMBEDDING_MODELS = {

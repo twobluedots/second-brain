@@ -1,0 +1,116 @@
+{"note_id": "v2_mood_001", "query": "overstimulated in crowded station", "target_system": "search", "expected_note_ids": ["v2_mood_001"]}
+{"note_id": "v2_mood_001", "query": "too much noise feeling overwhelmed", "target_system": "search", "expected_note_ids": ["v2_mood_001"]}
+{"note_id": "v2_mood_001", "query": "how do I feel in loud crowded places", "target_system": "ask", "intent": "qa", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["v2_mood_001"]}
+{"note_id": "v2_mood_001", "query": "show me notes about feeling overwhelmed", "target_system": "ask", "intent": "browse", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["v2_mood_001"]}
+{"note_id": "v2_mood_002", "query": "good mood after flat days", "target_system": "search", "expected_note_ids": ["v2_mood_002"]}
+{"note_id": "v2_mood_002", "query": "energy came back", "target_system": "search", "expected_note_ids": ["v2_mood_002"]}
+{"note_id": "v2_mood_002", "query": "what does it feel like when my mood lifts", "target_system": "ask", "intent": "qa", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["v2_mood_002"]}
+{"note_id": "v2_mood_002", "query": "show me the notes where I was in a good mood", "target_system": "ask", "intent": "browse", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["v2_mood_002"]}
+{"note_id": "v2_journal_001", "query": "day with nothing then everything at once", "target_system": "search", "expected_note_ids": ["v2_journal_001"]}
+{"note_id": "v2_journal_001", "query": "walking home end of day note", "target_system": "search", "expected_note_ids": ["v2_journal_001"]}
+{"note_id": "v2_journal_001", "query": "show me my end of day reflections", "target_system": "ask", "intent": "browse", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["v2_journal_001"]}
+{"note_id": "v2_journal_001", "query": "what did I say about how my days are shaped", "target_system": "ask", "intent": "qa", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["v2_journal_001"]}
+{"note_id": "v2_journal_002", "query": "sunday evening dread", "target_system": "search", "expected_note_ids": ["v2_journal_002"]}
+{"note_id": "v2_journal_002", "query": "same feeling before the week starts", "target_system": "search", "expected_note_ids": ["v2_journal_002"]}
+{"note_id": "v2_journal_002", "query": "is there a pattern in how I feel on Sundays", "target_system": "ask", "intent": "pattern", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["v2_journal_002", "v2_journal_002b", "v2_journal_002c"]}
+{"note_id": "v2_journal_002", "query": "what do I usually feel before the week starts", "target_system": "ask", "intent": "pattern", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["v2_journal_002"]}
+{"note_id": "v2_journal_002b", "query": "sunday dread again", "target_system": "search", "expected_note_ids": ["v2_journal_002b"]}
+{"note_id": "v2_journal_002b", "query": "same feeling different sunday", "target_system": "search", "expected_note_ids": ["v2_journal_002b"]}
+{"note_id": "v2_journal_002b", "query": "what was bothering me last Sunday evening", "target_system": "ask", "intent": "qa", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["v2_journal_002b"]}
+{"note_id": "v2_journal_002c", "query": "sunday evening low mood", "target_system": "search", "expected_note_ids": ["v2_journal_002c"]}
+{"note_id": "v2_journal_002c", "query": "dread before the week starts", "target_system": "search", "expected_note_ids": ["v2_journal_002c"]}
+{"note_id": "v2_journal_002c", "query": "how was I feeling on Sunday evenings a few weeks ago", "target_system": "ask", "intent": "qa", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["v2_journal_002c"]}
+{"note_id": "v2_task_001", "query": "cancel gym membership", "target_system": "search", "expected_note_ids": ["v2_task_001"]}
+{"note_id": "v2_task_001", "query": "call insurance company before Friday", "target_system": "search", "expected_note_ids": ["v2_task_001"]}
+{"note_id": "v2_task_001", "query": "what did I say I needed to handle before the deadline?", "target_system": "ask", "intent": "qa", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["v2_task_001"]}
+{"note_id": "v2_task_001", "query": "show me the reminders I recorded while out?", "target_system": "ask", "intent": "browse", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["v2_task_001"]}
+{"note_id": "v2_ach_001", "query": "finally did the form", "target_system": "search", "expected_note_ids": ["v2_ach_001"]}
+{"note_id": "v2_ach_001", "query": "took twenty minutes to finish", "target_system": "search", "expected_note_ids": ["v2_ach_001"]}
+{"note_id": "v2_ach_001", "query": "what form did I finally complete after postponing it", "target_system": "ask", "intent": "qa", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["v2_ach_001"]}
+{"note_id": "v2_ach_001", "query": "show me the tasks I've completed", "target_system": "ask", "intent": "browse", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["v2_ach_001"]}
+{"note_id": "v2_ach_002", "query": "streak of keeping a habit", "target_system": "search", "expected_note_ids": ["v2_ach_002"]}
+{"note_id": "v2_ach_002", "query": "third time in a row", "target_system": "search", "expected_note_ids": ["v2_ach_002"]}
+{"note_id": "v2_ach_002", "query": "have I kept the streak going this week", "target_system": "ask", "intent": "qa", "expected_time_filter": "this_week", "expected_category_filter": null, "expected_note_ids": ["v2_ach_002", "v2_ach_002b", "v2_ach_002c"]}
+{"note_id": "v2_ach_002", "query": "show me notes about habits I kept up", "target_system": "ask", "intent": "browse", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["v2_ach_002"]}
+{"note_id": "v2_ach_002b", "query": "second time this week doing the habit", "target_system": "search", "expected_note_ids": ["v2_ach_002b"]}
+{"note_id": "v2_ach_002b", "query": "kept it up again", "target_system": "search", "expected_note_ids": ["v2_ach_002b"]}
+{"note_id": "v2_ach_002b", "query": "did I do the habit again a couple days ago?", "target_system": "ask", "intent": "qa", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["v2_ach_002b"]}
+{"note_id": "v2_ach_002c", "query": "first time doing the habit this week", "target_system": "search", "expected_note_ids": ["v2_ach_002c"]}
+{"note_id": "v2_ach_002c", "query": "started the habit again", "target_system": "search", "expected_note_ids": ["v2_ach_002c"]}
+{"note_id": "v2_ach_002c", "query": "when did I start doing the habit this week?", "target_system": "ask", "intent": "factual", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["v2_ach_002c"]}
+{"note_id": "t2_mood_001", "query": "tired but can't switch off", "target_system": "search", "expected_note_ids": ["t2_mood_001"]}
+{"note_id": "t2_mood_001", "query": "late night mind racing", "target_system": "search", "expected_note_ids": ["t2_mood_001"]}
+{"note_id": "t2_mood_001", "query": "how do I feel late at night when I can't sleep", "target_system": "ask", "intent": "qa", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_mood_001"]}
+{"note_id": "t2_mood_001", "query": "show me my late night notes", "target_system": "ask", "intent": "browse", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_mood_001"]}
+{"note_id": "t2_mood_002", "query": "morning mood log", "target_system": "search", "expected_note_ids": ["t2_mood_002"]}
+{"note_id": "t2_mood_002", "query": "how I woke up feeling", "target_system": "search", "expected_note_ids": ["t2_mood_002"]}
+{"note_id": "t2_mood_002", "query": "show me notes about mornings", "target_system": "ask", "intent": "browse", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_mood_002"]}
+{"note_id": "t2_mood_002", "query": "have my mornings been better or worse lately", "target_system": "ask", "intent": "pattern", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_mood_002"]}
+{"note_id": "t2_mood_003", "query": "irritable over small things", "target_system": "search", "expected_note_ids": ["t2_mood_003"]}
+{"note_id": "t2_mood_003", "query": "snappy afternoon", "target_system": "search", "expected_note_ids": ["t2_mood_003"]}
+{"note_id": "t2_mood_003", "query": "what makes me irritable", "target_system": "ask", "intent": "qa", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_mood_003"]}
+{"note_id": "t2_mood_003", "query": "show me notes where I was annoyed", "target_system": "ask", "intent": "browse", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_mood_003"]}
+{"note_id": "t2_mood_004", "query": "nervous before a call", "target_system": "search", "expected_note_ids": ["t2_mood_004"]}
+{"note_id": "t2_mood_004", "query": "waiting is worse than the thing", "target_system": "search", "expected_note_ids": ["t2_mood_004"]}
+{"note_id": "t2_mood_004", "query": "how do I feel before things I'm nervous about", "target_system": "ask", "intent": "qa", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_mood_004"]}
+{"note_id": "t2_mood_004", "query": "what can I do about anxious feelings while waiting for something", "target_system": "ask", "intent": "qa", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_mood_004"]}
+{"note_id": "t2_journal_001", "query": "scattered day nothing finished", "target_system": "search", "expected_note_ids": ["t2_journal_001"]}
+{"note_id": "t2_journal_001", "query": "started three things finished none", "target_system": "search", "expected_note_ids": ["t2_journal_001"]}
+{"note_id": "t2_journal_001", "query": "what happens on days when I can't finish anything", "target_system": "ask", "intent": "qa", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_journal_001"]}
+{"note_id": "t2_journal_001", "query": "show me notes about scattered days", "target_system": "ask", "intent": "browse", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_journal_001"]}
+{"note_id": "t2_journal_002", "query": "same theme keeps coming up", "target_system": "search", "expected_note_ids": ["t2_journal_002"]}
+{"note_id": "t2_journal_002", "query": "recurring thought this week", "target_system": "search", "expected_note_ids": ["t2_journal_002"]}
+{"note_id": "t2_journal_002", "query": "what keeps coming up in my notes this week", "target_system": "ask", "intent": "pattern", "expected_time_filter": "this_week", "expected_category_filter": null, "expected_note_ids": ["t2_journal_002"]}
+{"note_id": "t2_journal_002", "query": "show me what I wrote this week", "target_system": "ask", "intent": "browse", "expected_time_filter": "this_week", "expected_category_filter": null, "expected_note_ids": ["t2_journal_002"]}
+{"note_id": "t2_journal_003", "query": "quiet evening cooked and tidied", "target_system": "search", "expected_note_ids": ["t2_journal_003"]}
+{"note_id": "t2_journal_003", "query": "ordinary good day", "target_system": "search", "expected_note_ids": ["t2_journal_003"]}
+{"note_id": "t2_journal_003", "query": "what does a good ordinary evening look like for me?", "target_system": "ask", "intent": "qa", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_journal_003"]}
+{"note_id": "t2_journal_003", "query": "show me notes about calm days", "target_system": "ask", "intent": "browse", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_journal_003"]}
+{"note_id": "t2_journal_004", "query": "changed my routine how it felt", "target_system": "search", "expected_note_ids": ["t2_journal_004"]}
+{"note_id": "t2_journal_004", "query": "first week of the new setup", "target_system": "search", "expected_note_ids": ["t2_journal_004"]}
+{"note_id": "t2_journal_004", "query": "how did the change to my routine go", "target_system": "ask", "intent": "qa", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_journal_004"]}
+{"note_id": "t2_journal_004", "query": "what did I expect versus what actually happened after I changed my schedule", "target_system": "ask", "intent": "qa", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_journal_004"]}
+{"note_id": "t2_journal_005", "query": "something someone said that stuck with me", "target_system": "search", "expected_note_ids": ["t2_journal_005"]}
+{"note_id": "t2_journal_005", "query": "offhand comment I keep thinking about", "target_system": "search", "expected_note_ids": ["t2_journal_005"]}
+{"note_id": "t2_journal_005", "query": "what did someone say that stuck with me", "target_system": "ask", "intent": "factual", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_journal_005"]}
+{"note_id": "t2_journal_005", "query": "show me notes about conversations I was processing", "target_system": "ask", "intent": "browse", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_journal_005"]}
+{"note_id": "t2_task_001", "query": "errands to run", "target_system": "search", "expected_note_ids": ["t2_task_001"]}
+{"note_id": "t2_task_001", "query": "things to pick up and return", "target_system": "search", "expected_note_ids": ["t2_task_001"]}
+{"note_id": "t2_task_001", "query": "show me my to-dos from this week", "target_system": "ask", "intent": "browse", "expected_time_filter": "this_week", "expected_category_filter": null, "expected_note_ids": ["t2_task_001"]}
+{"note_id": "t2_task_001", "query": "what errands did I write down", "target_system": "ask", "intent": "qa", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_task_001"]}
+{"note_id": "t2_task_002", "query": "reply I still owe someone", "target_system": "search", "expected_note_ids": ["t2_task_002"]}
+{"note_id": "t2_task_002", "query": "message I keep not answering", "target_system": "search", "expected_note_ids": ["t2_task_002"]}
+{"note_id": "t2_task_002", "query": "what was that message I kept meaning to deal with", "target_system": "ask", "intent": "factual", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_task_002"]}
+{"note_id": "t2_task_002", "query": "show me the follow-ups I still owe", "target_system": "ask", "intent": "browse", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_task_002"]}
+{"note_id": "t2_task_003", "query": "Notion AI tool", "target_system": "search", "expected_note_ids": ["t2_task_003"]}
+{"note_id": "t2_task_003", "query": "saved to check later", "target_system": "search", "expected_note_ids": ["t2_task_003"]}
+{"note_id": "t2_task_003", "query": "Did I save anything interesting to look into later?", "target_system": "ask", "intent": "browse", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_task_003"]}
+{"note_id": "t2_task_003", "query": "What was that tool I wanted to explore?", "target_system": "ask", "intent": "factual", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_task_003"]}
+{"note_id": "t2_task_004", "query": "renewal deadline", "target_system": "search", "expected_note_ids": ["t2_task_004"]}
+{"note_id": "t2_task_004", "query": "insurance renewal form submission", "target_system": "search", "expected_note_ids": ["t2_task_004"]}
+{"note_id": "t2_task_004", "query": "what deadline did I write down", "target_system": "ask", "intent": "factual", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_task_004"]}
+{"note_id": "t2_task_004", "query": "show me anything with a due date", "target_system": "ask", "intent": "browse", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_task_004"]}
+{"note_id": "t2_task_005", "query": "brain dump of everything on my plate", "target_system": "search", "expected_note_ids": ["t2_task_005"]}
+{"note_id": "t2_task_005", "query": "list of everything I have to do", "target_system": "search", "expected_note_ids": ["t2_task_005"]}
+{"note_id": "t2_task_005", "query": "the task note where I dumped everything I had to do", "target_system": "ask", "intent": "qa", "expected_time_filter": null, "expected_category_filter": "task", "expected_note_ids": ["t2_task_005"]}
+{"note_id": "t2_task_005", "query": "show me what I had on my plate this week", "target_system": "ask", "intent": "browse", "expected_time_filter": "this_week", "expected_category_filter": null, "expected_note_ids": ["t2_task_005"]}
+{"note_id": "t2_ach_001", "query": "finally closed a long open task", "target_system": "search", "expected_note_ids": ["t2_ach_001"]}
+{"note_id": "t2_ach_001", "query": "thing I finished after months", "target_system": "search", "expected_note_ids": ["t2_ach_001"]}
+{"note_id": "t2_ach_001", "query": "what did I finish that had been open for months", "target_system": "ask", "intent": "factual", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_ach_001"]}
+{"note_id": "t2_ach_001", "query": "show me things I completed", "target_system": "ask", "intent": "browse", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_ach_001"]}
+{"note_id": "t2_ach_002", "query": "milestone count reached", "target_system": "search", "expected_note_ids": ["t2_ach_002"]}
+{"note_id": "t2_ach_002", "query": "first time doing it alone", "target_system": "search", "expected_note_ids": ["t2_ach_002"]}
+{"note_id": "t2_ach_002", "query": "what milestones have I hit", "target_system": "ask", "intent": "qa", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_ach_002"]}
+{"note_id": "t2_ach_002", "query": "show me my milestone notes", "target_system": "ask", "intent": "browse", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_ach_002"]}
+{"note_id": "t2_ach_003", "query": "used to be hard now it's easy", "target_system": "search", "expected_note_ids": ["t2_ach_003"]}
+{"note_id": "t2_ach_003", "query": "noticed I got better at something", "target_system": "search", "expected_note_ids": ["t2_ach_003"]}
+{"note_id": "t2_ach_003", "query": "what has gotten easier for me over time", "target_system": "ask", "intent": "pattern", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_ach_003"]}
+{"note_id": "t2_ach_003", "query": "what did I say about something that used to be hard", "target_system": "ask", "intent": "factual", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_ach_003"]}
+{"note_id": "t2_ach_004", "query": "small health win", "target_system": "search", "expected_note_ids": ["t2_ach_004"]}
+{"note_id": "t2_ach_004", "query": "cooked instead of ordering", "target_system": "search", "expected_note_ids": ["t2_ach_004"]}
+{"note_id": "t2_ach_004", "query": "show me the small wins I logged", "target_system": "ask", "intent": "browse", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_ach_004"]}
+{"note_id": "t2_ach_004", "query": "what small things did I do for myself", "target_system": "ask", "intent": "qa", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_ach_004"]}
+{"note_id": "t2_ach_005", "query": "compliment I want to remember", "target_system": "search", "expected_note_ids": ["t2_ach_005"]}
+{"note_id": "t2_ach_005", "query": "positive feedback someone gave me", "target_system": "search", "expected_note_ids": ["t2_ach_005"]}
+{"note_id": "t2_ach_005", "query": "show me the wins I logged as achievements", "target_system": "ask", "intent": "browse", "expected_time_filter": null, "expected_category_filter": "achievement", "expected_note_ids": ["t2_ach_005"]}
+{"note_id": "t2_ach_005", "query": "is there any wins from this week?", "target_system": "ask", "intent": "pattern", "expected_time_filter": "this_week", "expected_category_filter": null, "expected_note_ids": ["t2_ach_005"]}

@@ -20,6 +20,7 @@ dependencies = [
     "ragas>=0.4.3",
     "langchain-ollama>=1.1.0",
     "rapidfuzz>=3.14.5",
+    "pyyaml>=6.0.3",
 ]
 
 [build-system]

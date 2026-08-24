@@ -1,0 +1,820 @@
+# Dataset 1 — Ask-aware templates (pilot set)
+# Covers the four categories with zero coverage in the old templates.yaml: mood, journal, task, achievement.
+# Each template = one generated note + 2 search-style queries + up to 2 structured ask-style queries.
+#
+# Ask hints are calibrated against 28 real logged Ask queries (23 distinct):
+#   intent mix browse 12/28, qa 13/28, pattern 3/28  → pattern stays rare
+#   expected_time_filter set in only 4/28 (always "this_week") → almost always null
+#   expected_category_filter set in 0/28 → null everywhere except 2 deliberate probe queries
+#   (t2_task_005 and t2_ach_005) that test whether the analyzer *should* be extracting a category.
+#
+# days_ago: relative offset from generation/load time, not an absolute date — a future loader
+#   computes created_at = load_time − days_ago. Lets "this_week" filters have real positives
+#   (days_ago <= 6) AND negatives (everything else) to filter against, without the dataset going
+#   stale. Spread across ~0-40 days for the whole pilot.
+#
+# expected_note_ids: on a query_hints_ask entry, defaults to [this template's id] if omitted.
+#   Pattern-intent hints that should aggregate multiple notes (recurrence = separation in time,
+#   not notes written in the same sitting) list all contributing ids explicitly — see the two
+#   worked examples: v2_journal_002 (Sunday dread, recurring across separate weeks, no time
+#   filter) and v2_ach_002 (habit streak, multiple sessions within the current week + this_week
+#   filter combined).
+#
+# style_notes key:
+#   voice: spoken out loud, mid-thought, run-on, filler words, ends abruptly.
+#          Transcript comes from raw Whisper (no cleanup step) — basic sentence punctuation
+#          only; an ellipsis is fine if speech trails off, never emoji.
+#   text:  fragments allowed, direct, no need for full sentences
+
+# ─────────────────────────────────────────
+# VOICE NOTES (11)
+# ─────────────────────────────────────────
+
+voice_mood:
+
+  - id: v2_mood_001
+    type: voice
+    category: mood
+    language: en
+    word_range: [40, 80]
+    days_ago: 12
+    scenario: >
+      You are somewhere loud and crowded — a shop, a station, an open office — and everything
+      has become too much at once. Sound, lights, people talking over each other. You stepped
+      aside and recorded a note to get the feeling out of your body instead of holding it.
+    style_notes: >
+      Short and a little clipped. Names the environment first, then the feeling. Slightly
+      breathless. No solution, no reframe — just clocking the state. Transcribed speech, so
+      it reads as spoken language with normal periods and commas; an ellipsis is fine if it trails off, never emoji.
+    query_hints_search:
+      - "overstimulated in a crowded place"
+      - "too much noise felt overwhelmed"
+    query_hints_ask:
+      - text: "how do I feel in loud crowded places"
+        intent: qa
+        expected_time_filter: null
+        expected_category_filter: null
+      - text: "show me notes about feeling overwhelmed"
+        intent: browse
+        expected_time_filter: null
+        expected_category_filter: null
+
+  - id: v2_mood_002
+    type: voice
+    category: mood
+    language: en
+    word_range: [50, 90]
+    days_ago: 27
+    scenario: >
+      After a stretch of flat, grey days your mood lifted without any obvious reason — you woke
+      up lighter and it stayed. You are recording it mostly as evidence, because when the flat
+      days come back you never believe the good ones were real.
+    style_notes: >
+      Warm and slightly disbelieving. Compares directly to how the last few days felt. Ends
+      loosely, maybe with a note-to-self to remember this. Transcribed speech — plain sentence
+      punctuation; an ellipsis is fine if it trails off, never emoji.
+    query_hints_search:
+      - "good mood after flat days"
+      - "energy came back"
+    query_hints_ask:
+      - text: "what does it feel like when my mood lifts"
+        intent: qa
+        expected_time_filter: null
+        expected_category_filter: null
+      - text: "show me the notes where I was in a good mood"
+        intent: browse
+        expected_time_filter: null
+        expected_category_filter: null
+
+voice_journal:
+
+  - id: v2_journal_001
+    type: voice
+    category: journal
+    language: en
+    word_range: [70, 120]
+    days_ago: 18
+    scenario: >
+      Walking home at the end of the day, and looking back it was strange — you did basically
+      nothing for hours, then in the last thirty minutes you knocked out everything you'd been
+      putting off. You're recording it because that pattern keeps happening and you want to
+      remember it happened again.
+    style_notes: >
+      Wandering, tired, thinking out loud. Describes the empty stretch first, then the sudden
+      burst at the end. One concrete example of what got done in the burst. Transcribed speech —
+      ordinary punctuation; an ellipsis is fine if it trails off, never emoji.
+    query_hints_search:
+      - "day with nothing then everything at once"
+      - "walking home end of day note"
+    query_hints_ask:
+      - text: "show me my end of day reflections"
+        intent: browse
+        expected_time_filter: null
+        expected_category_filter: null
+      - text: "what did I say about how my days are shaped"
+        intent: qa
+        expected_time_filter: null
+        expected_category_filter: null
+
+  - id: v2_journal_002
+    type: voice
+    category: journal
+    language: en
+    word_range: [60, 110]
+    days_ago: 3
+    scenario: >
+      Sunday evening. The same low dread that shows up most Sunday evenings has shown up again.
+      You record a note about it partly to process it and partly because you have started
+      suspecting it is weekly and want something on record to check that against.
+    style_notes: >
+      Resigned but curious about the repetition. Says out loud that this keeps happening.
+      Ends without resolving it. Transcribed speech — normal sentence punctuation; an ellipsis is fine if it trails off, never emoji.
+    query_hints_search:
+      - "sunday evening dread"
+      - "same feeling before the week starts"
+    query_hints_ask:
+      - text: "is there a pattern in how I feel on Sundays"
+        intent: pattern
+        expected_time_filter: null
+        expected_category_filter: null
+        expected_note_ids: [v2_journal_002, v2_journal_002b, v2_journal_002c]
+      - text: "what do I usually feel before the week starts"
+        intent: pattern
+        expected_time_filter: null
+        expected_category_filter: null
+
+  - id: v2_journal_002b
+    type: voice
+    category: journal
+    language: en
+    word_range: [60, 110]
+    days_ago: 10
+    scenario: >
+      Another Sunday evening, a different specific worry this time but the same low dread
+      showing up again. You note that it's not just a one-off — this really does seem to
+      happen most Sundays.
+    style_notes: >
+      Similar resigned tone to the pattern, slightly more certain this time that it's a
+      recurring thing. Names what's different about tonight's version of it. Transcribed
+      speech — plain sentence punctuation; an ellipsis is fine if it trails off, never emoji.
+    query_hints_search:
+      - "sunday dread again"
+      - "same feeling different sunday"
+    query_hints_ask:
+      - text: "what was bothering me last Sunday evening"
+        intent: qa
+        expected_time_filter: null
+        expected_category_filter: null
+
+  - id: v2_journal_002c
+    type: voice
+    category: journal
+    language: en
+    word_range: [50, 90]
+    days_ago: 17
+    scenario: >
+      An earlier Sunday evening, before you'd started noticing any pattern to it — just the
+      dread itself, unexplained, nothing connected to it yet.
+    style_notes: >
+      Simple, no reflection about repetition since this is the earliest instance. Just naming
+      the low mood as the evening arrives. Transcribed speech — plain punctuation; an ellipsis is fine if it trails off, never emoji.
+    query_hints_search:
+      - "sunday evening low mood"
+      - "dread before the week starts"
+    query_hints_ask:
+      - text: "how was I feeling on Sunday evenings a few weeks ago"
+        intent: qa
+        expected_time_filter: null
+        expected_category_filter: null
+
+voice_task:
+
+  - id: v2_task_001
+    type: voice
+    category: task
+    language: en
+    word_range: [25, 55]
+    days_ago: 6
+    scenario: >
+      You are mid-errand and something you have to handle before a deadline surfaces out of
+      nowhere — a call to make, a subscription to cancel, a document to renew. You say it into
+      the app immediately because it will be gone in ten seconds otherwise.
+    style_notes: >
+      Very short and fast. Starts mid-sentence. Says the thing and roughly when it is due, then
+      stops. Possibly one small extra detail tacked on at the end. Transcribed speech — plain
+      punctuation; an ellipsis is fine if it trails off, never emoji.
+    query_hints_search:
+      - "thing I need to cancel"
+      - "call I have to make before the deadline"
+    query_hints_ask:
+      - text: "what did I say I needed to handle before the deadline"
+        intent: qa
+        expected_time_filter: null
+        expected_category_filter: null
+      - text: "show me the reminders I recorded while out"
+        intent: browse
+        expected_time_filter: null
+        expected_category_filter: null
+
+voice_achievement:
+
+  - id: v2_ach_001
+    type: voice
+    category: achievement
+    language: en
+    word_range: [40, 80]
+    days_ago: 33
+    scenario: >
+      You just finished something you had been putting off for weeks — a form, a repair, a
+      difficult message you finally sent. You are recording right after, still slightly surprised
+      that it took twenty minutes after weeks of avoiding it.
+    style_notes: >
+      A bit triumphant, a bit sheepish about how long it took. Names the thing and how long it
+      actually took. Short. Transcribed speech — ordinary punctuation; an ellipsis is fine if it trails off, never emoji.
+    query_hints_search:
+      - "finally did the thing I was avoiding"
+      - "took twenty minutes after weeks"
+    query_hints_ask:
+      - text: "what did I finally get done after putting it off"
+        intent: qa
+        expected_time_filter: null
+        expected_category_filter: null
+      - text: "show me the things I finished"
+        intent: browse
+        expected_time_filter: null
+        expected_category_filter: null
+
+  - id: v2_ach_002
+    type: voice
+    category: achievement
+    language: en
+    word_range: [50, 90]
+    days_ago: 1
+    scenario: >
+      You have kept up a small habit several times in a row now — a walk, an early start, a
+      practice session — and the streak itself is the thing worth logging, more than any single
+      instance of it. You record it right after the latest one, the third time this week.
+    style_notes: >
+      Pleased and a little protective of the streak. States the count. Half-joking about not
+      wanting to jinx it. Transcribed speech — normal sentence punctuation; an ellipsis is fine if it trails off, never emoji.
+    query_hints_search:
+      - "streak of keeping a habit"
+      - "third time in a row"
+    query_hints_ask:
+      - text: "have I kept the streak going this week"
+        intent: qa
+        expected_time_filter: this_week
+        expected_category_filter: null
+        expected_note_ids: [v2_ach_002, v2_ach_002b, v2_ach_002c]
+      - text: "show me notes about habits I kept up"
+        intent: browse
+        expected_time_filter: null
+        expected_category_filter: null
+
+  - id: v2_ach_002b
+    type: voice
+    category: achievement
+    language: en
+    word_range: [40, 80]
+    days_ago: 3
+    scenario: >
+      Second time this week doing the habit — the walk, the early start, the practice session.
+      Recording it right after, same as the first time, building the count.
+    style_notes: >
+      Similar pleased tone, slightly more confident now that it's twice in a row. States the
+      count. Transcribed speech — normal sentence punctuation; an ellipsis is fine if it trails off, never emoji.
+    query_hints_search:
+      - "second time this week doing the habit"
+      - "kept it up again"
+    query_hints_ask:
+      - text: "did I do the habit again a couple days ago"
+        intent: qa
+        expected_time_filter: null
+        expected_category_filter: null
+
+  - id: v2_ach_002c
+    type: voice
+    category: achievement
+    language: en
+    word_range: [40, 80]
+    days_ago: 5
+    scenario: >
+      The first time this week you did the habit — the one that started the streak, before you
+      knew it would turn into one. Recorded right after, no idea yet that it would continue.
+    style_notes: >
+      Simple, satisfied but not yet framing it as a streak — that framing comes later.
+      Transcribed speech — plain punctuation; an ellipsis is fine if it trails off, never emoji.
+    query_hints_search:
+      - "first time doing the habit this week"
+      - "started the habit again"
+    query_hints_ask:
+      - text: "when did I start doing the habit this week"
+        intent: factual
+        expected_time_filter: null
+        expected_category_filter: null
+
+
+# ─────────────────────────────────────────
+# TEXT NOTES (19)
+# ─────────────────────────────────────────
+
+text_mood:
+
+  - id: t2_mood_001
+    type: text
+    category: mood
+    language: en
+    word_range: [40, 80]
+    days_ago: 15
+    scenario: >
+      Late at night, exhausted but wired — the body is done and the mind is still running
+      through fragments of the day in no particular order. You type a short check-in instead
+      of lying there with it.
+    style_notes: >
+      Fragmented, lowercase-ish, honest. Might list two or three of the things looping.
+      No conclusion. Reads like it was typed in the dark.
+    query_hints_search:
+      - "tired but can't switch off"
+      - "late night mind racing"
+    query_hints_ask:
+      - text: "how do I feel late at night when I can't sleep"
+        intent: qa
+        expected_time_filter: null
+        expected_category_filter: null
+      - text: "show me my late night notes"
+        intent: browse
+        expected_time_filter: null
+        expected_category_filter: null
+
+  - id: t2_mood_002
+    type: text
+    category: mood
+    language: en
+    word_range: [30, 60]
+    days_ago: 4
+    scenario: >
+      A quick morning mood log, part of a habit of clocking your state before the day starts.
+      Today it is somewhere in the middle — not bad, not good, and you note what you think is
+      behind it in one line.
+    style_notes: >
+      Very short, almost a log entry. Names the state plainly and one likely cause. No
+      elaboration. Could be two sentences or a fragment plus a dash.
+    query_hints_search:
+      - "morning mood log"
+      - "how I woke up feeling"
+    query_hints_ask:
+      - text: "show me notes about mornings"
+        intent: browse
+        expected_time_filter: null
+        expected_category_filter: null
+      - text: "have my mornings been better or worse lately"
+        intent: pattern
+        expected_time_filter: null
+        expected_category_filter: null
+
+  - id: t2_mood_003
+    type: text
+    category: mood
+    language: en
+    word_range: [50, 90]
+    days_ago: 21
+    scenario: >
+      You were irritable all afternoon over nothing — a slow website, a badly worded message,
+      someone chewing. You noticed the irritability only after the fact and are logging it,
+      including a guess at what was actually underneath it.
+    style_notes: >
+      Slightly embarrassed but not harsh with yourself. Lists the small triggers. Ends with
+      a guess rather than a certainty.
+    query_hints_search:
+      - "irritable over small things"
+      - "snappy afternoon"
+    query_hints_ask:
+      - text: "what makes me irritable"
+        intent: qa
+        expected_time_filter: null
+        expected_category_filter: null
+      - text: "show me notes where I was annoyed"
+        intent: browse
+        expected_time_filter: null
+        expected_category_filter: null
+
+  - id: t2_mood_004
+    type: text
+    category: mood
+    language: en
+    word_range: [60, 110]
+    days_ago: 9
+    scenario: >
+      Nervous before something scheduled — a call, an appointment, a presentation. The waiting
+      is worse than the thing itself, which you know because it is always worse, and you are
+      writing that down while it is happening anyway.
+    style_notes: >
+      Anxious energy in the writing itself — short sentences, a bit repetitive. Acknowledges
+      that this happens every time without it helping. Ends unresolved.
+    query_hints_search:
+      - "nervous before a call"
+      - "waiting is worse than the thing"
+    query_hints_ask:
+      - text: "how do I feel before things I'm nervous about"
+        intent: qa
+        expected_time_filter: null
+        expected_category_filter: null
+      - text: "anxious feelings while waiting for something"
+        intent: qa
+        expected_time_filter: null
+        expected_category_filter: null
+
+text_journal:
+
+  - id: t2_journal_001
+    type: text
+    category: journal
+    language: en
+    word_range: [100, 180]
+    days_ago: 30
+    scenario: >
+      A scattered day — you opened five things, started three of them, finished none. Tabs
+      everywhere, a half-written message, a task list you rewrote instead of doing. You are
+      writing an honest accounting of where the hours went.
+    style_notes: >
+      Rambling and self-observing. Actually lists the half-started things. Aware of the irony
+      that writing this is also a way of not doing them. Ends with small self-compassion or
+      just stops.
+    query_hints_search:
+      - "scattered day nothing finished"
+      - "started three things finished none"
+    query_hints_ask:
+      - text: "what happens on days when I can't finish anything"
+        intent: qa
+        expected_time_filter: null
+        expected_category_filter: null
+      - text: "show me notes about scattered days"
+        intent: browse
+        expected_time_filter: null
+        expected_category_filter: null
+
+  - id: t2_journal_002
+    type: text
+    category: journal
+    language: en
+    word_range: [80, 140]
+    days_ago: 5
+    scenario: >
+      Looking back over the past several days you notice the same theme keeps surfacing in
+      your notes — the same worry, the same avoidance, the same small joy. You write about
+      the recurrence itself rather than any one instance.
+    style_notes: >
+      Reflective, mildly surprised at yourself. Refers back to earlier notes without quoting
+      them. Slightly structured but not a list. Ends with a question rather than a plan.
+    query_hints_search:
+      - "same theme keeps coming up"
+      - "recurring thought this week"
+    query_hints_ask:
+      - text: "what keeps coming up in my notes this week"
+        intent: pattern
+        expected_time_filter: this_week
+        expected_category_filter: null
+      - text: "show me what I wrote this week"
+        intent: browse
+        expected_time_filter: this_week
+        expected_category_filter: null
+
+  - id: t2_journal_003
+    type: text
+    category: journal
+    language: en
+    word_range: [70, 130]
+    days_ago: 19
+    scenario: >
+      An ordinary quiet evening that went well — you cooked something, tidied a corner, kept
+      the phone in another room. Nothing happened and that was the point. You write it down
+      because the good ordinary days leave no trace otherwise.
+    style_notes: >
+      Calm and plain. Concrete details of what you actually did. No lesson drawn, no
+      productivity framing. Short sentences.
+    query_hints_search:
+      - "quiet evening cooked and tidied"
+      - "ordinary good day"
+    query_hints_ask:
+      - text: "what does a good ordinary evening look like for me"
+        intent: qa
+        expected_time_filter: null
+        expected_category_filter: null
+      - text: "show me notes about calm days"
+        intent: browse
+        expected_time_filter: null
+        expected_category_filter: null
+
+  - id: t2_journal_004
+    type: text
+    category: journal
+    language: en
+    word_range: [90, 160]
+    days_ago: 40
+    scenario: >
+      You changed something about your routine — moved where you work, shifted your hours,
+      dropped a standing commitment — and you are writing about how the first stretch of the
+      new setup has actually felt versus how you expected it to feel.
+    style_notes: >
+      Comparative and a bit tentative. States what changed, then what surprised you. Honest
+      that it is too early to tell. Might end with what you will watch for next.
+    query_hints_search:
+      - "changed my routine how it felt"
+      - "first week of the new setup"
+    query_hints_ask:
+      - text: "how did the change to my routine go"
+        intent: qa
+        expected_time_filter: null
+        expected_category_filter: null
+      - text: "what did I expect versus what actually happened after I changed my schedule"
+        intent: qa
+        expected_time_filter: null
+        expected_category_filter: null
+
+  - id: t2_journal_005
+    type: text
+    category: journal
+    language: en
+    word_range: [80, 140]
+    days_ago: 26
+    scenario: >
+      Someone said something offhand that stuck with you — a small remark that landed harder
+      than they meant it to, or a compliment you did not know how to take. You are turning it
+      over on the page to figure out why it stuck.
+    style_notes: >
+      Careful, circling. Repeats the remark once. Tries to be fair to the person. Arrives at
+      a partial answer at best.
+    query_hints_search:
+      - "something someone said that stuck with me"
+      - "offhand comment I keep thinking about"
+    query_hints_ask:
+      - text: "what did someone say that stuck with me"
+        intent: factual
+        expected_time_filter: null
+        expected_category_filter: null
+      - text: "show me notes about conversations I was processing"
+        intent: browse
+        expected_time_filter: null
+        expected_category_filter: null
+
+text_task:
+
+  - id: t2_task_001
+    type: text
+    category: task
+    language: en
+    word_range: [30, 70]
+    days_ago: 2
+    scenario: >
+      A handful of small errands land in your head at once — something to pick up, something
+      to return, something to book. You type them as a quick list before they scatter again.
+    style_notes: >
+      List-shaped. Fragments, no verbs sometimes. Maybe a rough deadline on one of them. No
+      priorities, no formatting beyond dashes or line breaks.
+    query_hints_search:
+      - "errands to run"
+      - "things to pick up and return"
+    query_hints_ask:
+      - text: "show me my to-dos from this week"
+        intent: browse
+        expected_time_filter: this_week
+        expected_category_filter: null
+      - text: "what errands did I write down"
+        intent: qa
+        expected_time_filter: null
+        expected_category_filter: null
+
+  - id: t2_task_002
+    type: text
+    category: task
+    language: en
+    word_range: [25, 60]
+    days_ago: 14
+    scenario: >
+      There is a message or email you owe someone. You have opened it four times and closed
+      it four times. You note it down mostly to stop it from taking up space in your head
+      between openings.
+    style_notes: >
+      Short and slightly guilty. Names who and roughly what. Might add why it is hard to
+      answer in a half-sentence.
+    query_hints_search:
+      - "reply I still owe someone"
+      - "message I keep not answering"
+    query_hints_ask:
+      - text: "what was that message I kept meaning to deal with"
+        intent: factual
+        expected_time_filter: null
+        expected_category_filter: null
+      - text: "show me the follow-ups I still owe"
+        intent: browse
+        expected_time_filter: null
+        expected_category_filter: null
+
+  - id: t2_task_003
+    type: text
+    category: task
+    language: en
+    word_range: [40, 80]
+    days_ago: 22
+    scenario: >
+      You noticed something worth looking into later — a tool someone mentioned, a
+      cheaper option for something you pay for, a question you could not answer. Not urgent,
+      just parked so it does not vanish.
+    style_notes: >
+      Parked-thought shape. Names the thing and one line on why it is interesting. Explicitly
+      marked as not urgent — "at some point", "when I have time".
+    query_hints_search:
+      - "thing to look into later"
+      - "saved to check when I have time"
+    query_hints_ask:
+      - text: "did I save anything to look into later?"
+        intent: browse
+        expected_time_filter: null
+        expected_category_filter: null
+      - text: "what was that thing I wanted to look into"
+        intent: factual
+        expected_time_filter: null
+        expected_category_filter: null
+
+  - id: t2_task_004
+    type: text
+    category: task
+    language: en
+    word_range: [30, 70]
+    days_ago: 8
+    scenario: >
+      An administrative thing with a real deadline — a renewal, a bill, a form that expires.
+      You write it down the moment you see the date, because this is exactly the type of thing
+      you lose track of until it is late.
+    style_notes: >
+      Terse and slightly urgent. Date first or date last, but the date is definitely there.
+      Might include one detail about what is needed to actually do it.
+    query_hints_search:
+      - "renewal deadline"
+      - "form I need to submit by"
+    query_hints_ask:
+      - text: "what deadline did I write down"
+        intent: factual
+        expected_time_filter: null
+        expected_category_filter: null
+      - text: "show me anything with a due date"
+        intent: browse
+        expected_time_filter: null
+        expected_category_filter: null
+
+  - id: t2_task_005
+    type: text
+    category: task
+    language: en
+    word_range: [50, 100]
+    days_ago: 4
+    scenario: >
+      Everything on your plate at once has become impossible to hold, so you dump all of it
+      into one note — work things, home things, the thing you promised someone — in no order
+      and with no plan attached. Writing it out is the whole point.
+    style_notes: >
+      Unordered brain dump. Mixed sizes of task next to each other, trivial and heavy. No
+      prioritisation. Might end with a line about feeling lighter or about where to start.
+    query_hints_search:
+      - "brain dump of everything on my plate"
+      - "list of everything I have to do"
+    query_hints_ask:
+      - text: "the task note where I dumped everything I had to do"
+        intent: qa
+        expected_time_filter: null
+        expected_category_filter: task
+      - text: "show me what I had on my plate this week"
+        intent: browse
+        expected_time_filter: this_week
+        expected_category_filter: null
+
+text_achievement:
+
+  - id: t2_ach_001
+    type: text
+    category: achievement
+    language: en
+    word_range: [40, 80]
+    days_ago: 38
+    scenario: >
+      Something that had been open for a long time is finally closed — a task that had moved
+      from list to list for months, a loose end you finally tied. You log it plainly, without
+      much ceremony.
+    style_notes: >
+      Brief and flat in a satisfying way. States what and roughly how long it had been hanging
+      around. Maybe one parenthetical aside. Does not over-explain.
+    query_hints_search:
+      - "finally closed a long open task"
+      - "thing I finished after months"
+    query_hints_ask:
+      - text: "what did I finish that had been open for months"
+        intent: factual
+        expected_time_filter: null
+        expected_category_filter: null
+      - text: "show me things I completed"
+        intent: browse
+        expected_time_filter: null
+        expected_category_filter: null
+
+  - id: t2_ach_002
+    type: text
+    category: achievement
+    language: en
+    word_range: [50, 90]
+    days_ago: 17
+    scenario: >
+      A milestone with a number attached — the tenth time doing something, the first time doing
+      it alone, the longest you have kept something going. The count is what makes it feel real,
+      so the count goes in the note.
+    style_notes: >
+      Direct, a little proud. The number is stated early. One sentence on what it took to get
+      there. No false modesty and no big speech.
+    query_hints_search:
+      - "milestone count reached"
+      - "first time doing it alone"
+    query_hints_ask:
+      - text: "what milestones have I hit"
+        intent: qa
+        expected_time_filter: null
+        expected_category_filter: null
+      - text: "show me my milestone notes"
+        intent: browse
+        expected_time_filter: null
+        expected_category_filter: null
+
+  - id: t2_ach_003
+    type: text
+    category: achievement
+    language: en
+    word_range: [60, 110]
+    days_ago: 29
+    scenario: >
+      You did something that used to be genuinely hard and this time it was just a thing you
+      did. The win is not the task, it is that it cost you almost nothing. You are noting the
+      change because it happened gradually enough that you nearly missed it.
+    style_notes: >
+      Reflective rather than celebratory. Compares against how it used to feel. Concrete
+      example of the old difficulty. Ends by naming the progress plainly.
+    query_hints_search:
+      - "used to be hard now it's easy"
+      - "noticed I got better at something"
+    query_hints_ask:
+      - text: "what has gotten easier for me over time"
+        intent: pattern
+        expected_time_filter: null
+        expected_category_filter: null
+      - text: "what did I say about something that used to be hard"
+        intent: factual
+        expected_time_filter: null
+        expected_category_filter: null
+
+  - id: t2_ach_004
+    type: text
+    category: achievement
+    language: en
+    word_range: [30, 70]
+    days_ago: 11
+    scenario: >
+      A small physical or everyday win — you walked further than usual, slept properly two
+      nights running, cooked instead of ordering again. Minor on paper, but you want it counted.
+    style_notes: >
+      Very short. Concrete numbers or specifics where they exist. Slightly defensive about it
+      being small, or not defensive at all. One or two sentences.
+    query_hints_search:
+      - "small health win"
+      - "cooked instead of ordering"
+    query_hints_ask:
+      - text: "show me the small wins I logged"
+        intent: browse
+        expected_time_filter: null
+        expected_category_filter: null
+      - text: "what small things did I do for myself"
+        intent: qa
+        expected_time_filter: null
+        expected_category_filter: null
+
+  - id: t2_ach_005
+    type: text
+    category: achievement
+    language: en
+    word_range: [60, 110]
+    days_ago: 3
+    scenario: >
+      Someone outside your own head told you that you did well — a thank you, a compliment,
+      a piece of feedback that landed. You write it down verbatim-ish because you know from
+      experience it will be gone from memory by next week.
+    style_notes: >
+      Records what was actually said, then how it felt to hear it. Slightly awkward about
+      keeping a compliment on file. Explicitly says it is being saved for later.
+    query_hints_search:
+      - "compliment I want to remember"
+      - "positive feedback someone gave me"
+    query_hints_ask:
+      - text: "show me the wins I logged as achievements"
+        intent: browse
+        expected_time_filter: null
+        expected_category_filter: achievement
+      - text: "is there any wins from this week?"
+        intent: pattern
+        expected_time_filter: this_week
+        expected_category_filter: null

@@ -1,0 +1,5 @@
+# Gold-context-only generation quality — no retrieval/intent noise.
+# Ground-truth notes + ground-truth intent feed the generator directly.
+- dataset: dataset2
+  stages: [generation]
+  generation_metrics: [context_relevance, context_utilization, faithfulness, answer_relevancy]

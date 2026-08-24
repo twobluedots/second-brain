@@ -1,0 +1,12 @@
+# Equivalent of the old hardcoded __main__ loop in runner.py
+- dataset: dataset1
+  embedding_model: default
+  retriever: vector
+  n_results: 15
+  reranker: bge-reranker-base
+
+- dataset: dataset1
+  embedding_model: bge-large
+  retriever: vector
+  n_results: 15
+  reranker: bge-reranker-base

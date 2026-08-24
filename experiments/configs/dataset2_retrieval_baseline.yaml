@@ -1,0 +1,6 @@
+- dataset: dataset2
+  embedding_model: bge-large
+  retriever: vector
+  n_results: 10
+  reranker: null
+  stages: [retrieval]
