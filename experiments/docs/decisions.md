@@ -250,6 +250,43 @@ Templates: `v_ref_005`, `v_journal_004`, `t_journal_009`, `t_ref_005`, `t_insigh
 
 ---
 
+### 2026-08-24: Dataset2 stage-aware reporting — design (`experiments/reporting/`)
+
+**What I decided:**
+- New `experiments/reporting/` package split by function, not by stage: `summarize.py` (rows → dict, pure), `compare.py` (two row-sets → dict, pure), `print.py` (dict → terminal text). `experiments/report.py`/`experiments/compare.py` keep their existing invocation paths and delegate to it via a new `--stage {retrieval,intent,generation}` flag on dataset2 rows; omitted → every stage present in the run prints. Dataset1's existing behavior is untouched.
+- Compare rule: a stage is only comparable between two runs if it was actually computed in both — hard requirement for retrieval/intent (error clearly, never print an empty/misleading table). Generation is the deliberate exception: comparable across runs regardless of whether context came from gold notes or a retriever, since "given this context, how good is the answer" stays well-defined either way. Comparing a gold-context-only run against a full-pipeline run on generation metrics is a first-class use case, not something to reject — it's how retrieval's downstream impact gets measured indirectly.
+- Intent reporting surfaces per-class confusion (`expected_intent → actual_intent` counts), not just aggregate accuracy. Generation reporting surfaces a low-score count (`< 0.5`) alongside each metric's mean. Both because an average alone hides exactly the failure pattern worth seeing (which classes get confused; a few badly hallucinated answers buried in an otherwise-good mean).
+- Row matching for compare stays keyed by `query` text, same convention already used in dataset1's `compare.py` — no new join key.
+- Written up as a spec first (`experiments/docs/dataset2-stage-reporting.md`) rather than implementing directly — 8 decisions, over the usual 3-decision single-task threshold. Split into two implementation tasks: 4a (summarize + print + `report.py` wiring), 4b (compare + `compare.py` wiring).
+
+**Why:**
+- `report.py`/`compare.py` predate dataset2's multi-stage, sparse-column `stage_results` schema — they assume every row has the same shape (single `expected_id`, single `recall`/`mrr`). That breaks once rows can have any subset of {retrieval, intent, generation} populated depending on which stages a config selected.
+- Considered a folder split by stage instead (`retrieval.py`/`intent.py`/`generation.py`, each self-contained) — rejected in favor of by-function, since the goal is keeping the print layer cheaply swappable later (pandas/SQL/notebook, not built now) and keeping formatting consistent across stages by construction; by-stage would mean pulling print logic out of three files later instead of deleting one.
+- Folder can't be named `report/` — collides with the existing `experiments/report.py` module path.
+
+**Next:** implement Step 4a, verify against a dataset2 intent+retrieval run and a gold-context generation run per the spec's acceptance checks, then 4b.
+
+---
+
+### 2026-08-24: Dataset2 stage-aware reporting — Step 4a implemented
+
+**What I decided:**
+- Built `experiments/reporting/summarize.py` (pure rows → dict, one function per stage) and `print.py` (dict/row → terminal text, plus per-row drill-down: `show_retrieval_multi`, `show_intent`, `show_generation`). Wired into `report.py` via a new `--stage {retrieval,intent,generation}` flag and a dataset2 branch keyed off `"target_system" in rows[0]` (same precedent as `runner.py`'s own dataset1/dataset2 branch). dataset1's `show()`/`print_summary()` untouched.
+- Revised mid-implementation from the spec's original "one combined report" default: when `--stage` is omitted, `report.py` now writes **separate files per stage present** (`<run_id>_<stage>_report.txt`), each self-contained, instead of one file with three sections. Terminal output still prints every stage's block in sequence in a single invocation, so the "see everything at once" case loses nothing — but the saved artifact is scoped per stage, which matters because generation's per-row drill-down (query + context notes + answer + 4 metric scores) is long enough that a combined file is genuinely harder to scan for one stage.
+- The pre-existing `--all` flag needed no changes to work across the new dataset2 stages — combined with `--stage generation` it already gives "every generation result, not just low-scoring ones" with no new code.
+
+**Why:** the combined-file default optimized for a causal-chain view (see retrieval miss → generation hallucination together) at the cost of scannability; splitting files keeps that view available in the terminal for one invocation while making the saved reports each independently easy to reopen.
+
+**Verified:** all 7 acceptance checks in `dataset2-stage-reporting.md` passed against real runs — retrieval-only, intent-only, generation-only (gold context), full-pipeline (all 3 stages), and a dataset1 regression check (output unchanged). Confirmed gold-context vs full-pipeline generation runs produce genuinely different numbers (answer_relevancy 0.510 vs 0.600), showing Step 3's context-source composability carries through the new reporting layer correctly. `--stage` on a stage the run never computed fails with a clear message instead of an empty/misleading report.
+
+**`docs/engineering-standards.md` checklist:** mostly N/A — standalone `experiments/` CLI reporting code, no `src/`/`ui/`, SQLite, or ChromaDB changes, no new failure surface beyond the existing `FileNotFoundError` on a missing run (unchanged) and the new clear-error-on-missing-stage case (handled). Consciously skipped pytest coverage, matching `runner.py`/`grader.py`/`compare.py`'s own precedent in this track (none have tests) — verified instead via the acceptance-check runs above against real data.
+
+**Found and parked while reviewing report output (not part of this task):** near-duplicate "Sunday dread" query hints in dataset2 have weak ground-truth signal for content-only retrieval — logged separately above under "Eval set quality."
+
+**Next:** Step 4b — `experiments/reporting/compare.py` + `compare.py` CLI wiring (shared-stage detection, generation cross-stage comparison, clear error on unsupported comparisons), per the spec. Recommended as a fresh chat — separate task, and this session's context is now mostly Step 4a exploration that 4b doesn't need.
+
+---
+
 ### 2026-08-24: `runner.py` fixed — generation-stage eval no longer scores browse-intent rows with answer_relevancy
 
 **What I decided:** In `experiments/runner.py`, the generation stage now checks `gen_plan.intent != "browse"` before calling `generate_answer()`/`grade_generation()`. Browse-intent rows keep their `generated_answer=None` default, which `report.py` already excludes from the generation summary — no changes needed there or in `grader.py`.
