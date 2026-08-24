@@ -44,6 +44,9 @@ Intent rules:
 
 k values: factual=5, qa=8, pattern=20, browse=0
 
+Time filter rules:
+- Only set time_filter on an exact match: "today", "this week", "this month". Otherwise null.
+
 Query: {query}"""
 
 

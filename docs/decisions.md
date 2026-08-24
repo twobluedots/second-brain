@@ -874,3 +874,24 @@ DELETE FROM categories WHERE name NOT IN ('task','mood','journal','learning','re
 - Date/time is still extracted via fixed-width string slicing, same as before — flagged as OPEN in `docs/bugs.md` rather than fixed now, to keep this change scoped to the drift fix.
 
 **Verified:** faithfulness average went from ~0.73 to 1.0 on a fresh run. More directly — same question ("most important wins from last month"), the judge's own reasoning flipped from *"context does not specify a timeline of July 2026"* (verdict 0) to *"context explicitly states the user exercised and ate healthy on July 28"* (verdict 1), confirming the missing-date context was the cause, not something else.
+
+---
+
+### 2026-08-24: Query analyzer — time_filter only on exact calendar-window match, not guessed buckets
+
+**What I decided:** `src/rag/analyzer.py`'s query-analyzer prompt now only sets `time_filter` when the query names one of the three exact windows ("today" / "this week" / "this month"). Vague relative time language ("a couple days ago", "last Sunday", "a few weeks ago", "lately", "on Sundays") stays `null`. Final prompt addition is one line: `"Only set time_filter on an exact match: \"today\", \"this week\", \"this month\". Otherwise null."`
+
+**Why:**
+- `time_filter` is a hard filter downstream (Chroma/SQLite), not a hint — a wrong bucket can exclude the correct note entirely, not just mislabel a metric. E.g. a note 10 days old wrongly force-fit into `this_week` would never come back for that query.
+- The dataset2 intent eval (`dataset2_intent_baseline.yaml`) showed 16/56 mismatches, most of them vague-time queries the model was guessing a bucket for — the prompt had no rule telling it not to.
+
+**What I tried first:** Considered a richer time schema (actual date ranges instead of 3 fixed buckets) so vague-but-computable phrases like "a few weeks ago" could be represented precisely instead of discarded. Parked as the "detailed version" — needs schema changes across analyzer → retrieval → storage, plus regenerating eval gold labels. This exact-match fix addresses the actual failures without that scope.
+
+**Trade-offs:**
+- ✅ `time_filter` accuracy: 0.875 → 0.964 on the dataset2 intent eval (run `dataset2_intent_20260824-185808` vs. `dataset2_intent_20260824-120557`), measured against a fuller draft of this rule (explicit rule + 3 few-shot examples)
+- ✅ `category_filter` accuracy: 0.893 → 0.929 in that same run (incidental — this change didn't touch category logic)
+- ❌ `intent` accuracy: 0.911 → 0.839 in that same run — same failure categories as before (qa↔factual, qa↔pattern, qa↔browse boundary cases), just more of them. The time-filter section doesn't touch intent-classification rules, so this reads as run-to-run LLM variance on already-ambiguous boundary queries rather than a regression, but it isn't confirmed.
+- ⚠️ The prompt was then trimmed from that fuller draft down to the one-liner above (rationale + examples were unnecessary weight for a 2-line change) — **not re-verified against the eval**, so the 0.964/0.929/0.839 numbers above are for the fuller draft, not the shipped one-liner. Skipped consciously: low-risk wording trim, re-run deferred to whenever the intent-accuracy question below is chased down anyway.
+- ❌ Vague-but-genuinely-time-scoped queries ("a few weeks ago") still get no time signal at all — retrieval falls back entirely to semantic similarity, which struggles to disambiguate near-duplicate notes (e.g. the three near-identical "Sunday evening dread" journal entries in dataset2). This is exactly what the parked richer schema would fix.
+
+**When to reconsider:** If near-duplicate note disambiguation becomes a real recurring failure in practice, revisit the richer date-range schema. Also worth an intent-eval re-run — both to confirm whether the intent-accuracy dip is noise or real, and to verify the trimmed one-liner still gets the same `time_filter` improvement as the fuller draft it replaced.
