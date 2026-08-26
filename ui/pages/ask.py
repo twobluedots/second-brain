@@ -17,13 +17,15 @@ st.session_state.setdefault("ask_form_version", 0)
 version = st.session_state.ask_form_version
 audio_key = f"ask_voice_{version}"
 text_key = f"ask_text_{version}"
-transcribed_flag = f"ask_transcribed_{version}"
+processed_key = f"ask_voice_processed_{version}"
 
 voice_query = st.audio_input("Or ask with your voice", key=audio_key)
 
-# Transcribe once on audio arrival so it lands in the editable text field
-# instead of silently overriding what gets submitted.
-if voice_query is not None and not st.session_state.get(transcribed_flag):
+# Transcribe on audio arrival so it lands in the editable text field instead
+# of silently overriding what gets submitted. Keyed off file_id (not a
+# sticky flag) so re-recording — or retrying after a failure — is picked up
+# even within the same form version.
+if voice_query is not None and st.session_state.get(processed_key) != voice_query.file_id:
     with st.spinner("Transcribing..."):
         try:
             tmp_path = f"entries/ask_voice_{uuid.uuid4()}.wav"
@@ -33,10 +35,12 @@ if voice_query is not None and not st.session_state.get(transcribed_flag):
             logger.info("Whisper transcription (ask): %d ms", whisper_ms)
             Path(tmp_path).unlink(missing_ok=True)
             st.session_state[text_key] = transcription or ""
+            st.session_state[processed_key] = voice_query.file_id
         except Exception as e:
             logger.warning("Voice query transcription failed: %s", e)
-            st.warning("Couldn't transcribe voice — type your question instead.")
-    st.session_state[transcribed_flag] = True
+            st.warning("Couldn't transcribe voice.")
+            if st.button("Retry transcription"):
+                st.rerun()
 
 query_text = st.text_input("Ask anything about your notes", key=text_key)
 

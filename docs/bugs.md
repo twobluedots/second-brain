@@ -68,6 +68,15 @@ Bugs discovered but not yet prioritized for fixing. Update status as things chan
 
 ---
 
+## [FIXED] Ask page — second voice recording silently ignored
+- **Where**: Ask page → `ui/pages/ask.py` — voice transcription block
+- **What**: After recording once, a second recording (re-recording before hitting "Ask", or retrying after the Ask pipeline errored) never got transcribed — the text field kept the old/empty value with no error shown
+- **When found**: 2026-08-26 · **Fixed**: 2026-08-26
+- **Cause**: Transcription was guarded by a one-shot `ask_transcribed_{version}` boolean that flipped to `True` after the *first* recording of a form version and was never reset — including when transcription itself failed. `ask_form_version` (and thus a fresh flag) only bumps on a successful "Ask" click, so any recording after the first was skipped regardless of whether it was a new clip.
+- **Fix**: Replaced the boolean with `ask_voice_processed_{version}`, which stores the transcribed recording's `file_id` (stable per distinct `st.audio_input` clip) and only skips re-transcription when the current clip's `file_id` matches. On failure, `processed_key` is left unset and a "Retry transcription" button is shown — it re-runs transcription on the same audio (no re-recording needed, so a long recording isn't lost to a transient failure).
+
+---
+
 ## [FIXED] Ask page text bar not cleared after submit
 - **Where**: Ask tab → `src/app.py` — Ask page input widget
 - **What**: After submitting a question, the text input box is not cleared — the previous query remains in the field
