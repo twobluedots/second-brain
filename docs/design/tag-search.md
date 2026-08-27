@@ -30,7 +30,7 @@ Concrete "do X, see Y" lines. Each becomes a pytest test where possible (service
 3. (multi-tag AND — out of scope, tracked as follow-up)
 
 ## Done when
-- [ ] Acceptance checks pass
-- [ ] `docs/engineering-standards.md` checklist applied
-- [ ] decisions.md entry written (if a decision was made)
-- [ ] Committed
+- [x] Acceptance checks pass
+- [x] `docs/engineering-standards.md` checklist applied
+- [x] decisions.md entry written (if a decision was made)
+- [x] Committed
