@@ -163,6 +163,10 @@ def run(config: dict):
     stages = config.get("stages")
     needs_retrieval = stages is None or "retrieval" in stages
     needs_generation = bool(stages) and "generation" in stages
+    # stages=None means "legacy" config (no explicit stage list) — retrieval
+    # still runs (needs_retrieval above), so the row must record that or
+    # report.py's detect_stages() sees stages=[] and thinks nothing ran.
+    effective_stages = stages or (["retrieval"] if needs_retrieval else [])
     collection = load_or_build(config) if needs_retrieval else None
     generation_scorers = build_generation_scorers() if needs_generation else None
     generation_metrics = config.get("generation_metrics", GENERATION_METRICS)
@@ -268,7 +272,7 @@ def run(config: dict):
                     "retriever": config.get("retriever"),
                     "n_results": config.get("n_results"),
                     "reranker": config.get("reranker"),
-                    "stages": stages or [],
+                    "stages": effective_stages,
                     "query": query,
                     "note_id": pair.get("note_id"),
                     "target_system": target_system,
