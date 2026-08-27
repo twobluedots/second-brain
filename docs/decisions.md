@@ -895,3 +895,26 @@ DELETE FROM categories WHERE name NOT IN ('task','mood','journal','learning','re
 - ❌ Vague-but-genuinely-time-scoped queries ("a few weeks ago") still get no time signal at all — retrieval falls back entirely to semantic similarity, which struggles to disambiguate near-duplicate notes (e.g. the three near-identical "Sunday evening dread" journal entries in dataset2). This is exactly what the parked richer schema would fix.
 
 **When to reconsider:** If near-duplicate note disambiguation becomes a real recurring failure in practice, revisit the richer date-range schema. Also worth an intent-eval re-run — both to confirm whether the intent-accuracy dip is noise or real, and to verify the trimmed one-liner still gets the same `time_filter` improvement as the fuller draft it replaced.
+
+---
+
+### 2026-08-27: Tag search implementation — json_each match, unified click+type entry point, native Chroma ids restriction
+
+**What I decided:** Implemented `docs/design/tag-search.md`. Three follow-on calls made during the build, beyond what the spec locked:
+- Clicking a tag chip and typing `#tag` in the search box both go through one parser (`src/tags.extract_tag_filter`, pure + tested) instead of two separate code paths — a chip click just pre-fills `#tag` into the search box and jumps to Search.
+- Combining a tag filter with a free-text query: first tried widening the Chroma candidate pool to a fixed constant (`TAG_FILTER_CANDIDATE_POOL = 10000`) before post-filtering by tag in Python. Replaced it after review — ChromaDB's `collection.query()` accepts an `ids=` parameter (confirmed by checking the installed `chromadb==1.2.1` signature and testing against real data), so SQLite resolves the exact tag match first (`get_entry_ids_by_tag`, `json_each`) and Chroma ranks semantically *within* that exact candidate set. No overfetch, no post-filter step, no magic number.
+- Tag click was originally a real `st.button` per tag in `st.columns(len(tags))` — looked huge because columns stretch each button to fill an equal-width slot. Replaced with `st.pills` (self-sizing, small, rounded — matches the old inert-pill look, same widget family as the existing `segmented_control` filters).
+
+**Why:** the `ids=` restriction is strictly better than the overfetch-pool approach — correct at any scale (cost scales with actual tag membership, not a guessed constant), no post-filter step, no number to re-tune as the note count grows. Confirmed via direct testing against the real Chroma collection before committing to it, including composing with the existing `content_type`/date `where` filters.
+
+**What I tried first:** the `TAG_FILTER_CANDIDATE_POOL` overfetch-then-filter approach above — worked correctly but felt like a band-aid (flagged as such before landing on the `ids=` fix); storing tags as Chroma metadata directly (so `where` could filter natively) was considered and rejected for this task — Chroma metadata values are scalar, tags are open-ended lists, and it would touch `save()`/`update()`/`reindex_all()`, out of scope for a spec explicitly limited to the SQLite `json_each()` path.
+
+**Bug found during build:** `st.pills`'s click handler caused an infinite rerun loop — see `docs/bugs.md` ("Tag chip click — infinite rerun loop") for the mechanism and fix (clearing the widget's session_state key right after acting on a click, to make it genuinely one-shot).
+
+**Trade-offs:**
+- ✅ Exact match, no schema migration to `entries` (per spec), `search_log` gained a `tag` column with a migration script
+- ✅ Cost scales with real tag membership, not a fixed pool size
+- ❌ Case-sensitive tag matching (`#Python` ≠ `#python`) — consciously left as-is, matches existing `normalize_tag()` behavior elsewhere in the app, not revisited this round
+- ❌ Multi-tag AND filtering still deferred (per spec's own parking lot) — single-tag only
+
+**When to reconsider:** If tag search is used often enough that multi-tag AND filtering becomes a real ask, or if case-sensitivity causes real friction (e.g. typing `#Python` for a note tagged `python` and getting a false "no such tag" message).
