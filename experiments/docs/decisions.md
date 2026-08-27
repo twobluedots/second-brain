@@ -324,3 +324,30 @@ Templates: `v_ref_005`, `v_journal_004`, `t_journal_009`, `t_ref_005`, `t_insigh
 **When to reconsider:** before trusting future `factual`/`qa` intent-eval numbers, run the intent stage N times and average (single-run numbers aren't reliable given the non-determinism above). Update `templates2.yaml`'s header comment once `v2_ach_002`'s reclassification is confirmed final.
 
 ---
+
+### 2026-08-26: `runner.py` fixed — legacy (no-`stages`) configs wrote `stages: []`, silencing `report.py`
+
+**What I decided:** In `runner.py`, `needs_retrieval`/`needs_generation` already treat `stages=None` (config has no `stages` key) as "run retrieval by default" — but the row write at the old line 271 stored `"stages": stages or []`, i.e. literally `[]` for every legacy config, even though retrieval genuinely ran and populated `recall`/`mrr`/`retrieved_ids`. Added `effective_stages = stages or (["retrieval"] if needs_retrieval else [])` right after the existing `needs_retrieval` line, and write that instead.
+
+**Why:** `report.py`'s `detect_stages()` (added in the 2026-08-24 stage-aware reporting work) trusts the row's `stages` field to know what to report. For a legacy retrieval-only config it read back `[]`, concluded nothing ran, and silently produced no report at all — surfaced when `python -m experiments.report dataset2_openai-3-small_vector_n15_20260826-101910` ran clean but wrote nothing. `report.py` itself was correct; the writer was lying to it.
+
+**Also patched:** the already-generated `run_dataset2_openai-3-small_vector_n15_20260826-101910.jsonl` (116 rows, predates the fix) — `stages` field rewritten in place from `[]` to `["retrieval"]` so it doesn't need a rerun. Verified: report now generates (`..._retrieval_report.txt`, 116/116 queries, avg recall 1.000, avg mrr 0.786).
+
+**Not checked:** whether other pre-fix run files on disk have the same `stages: []` legacy issue — only the one run above was patched.
+
+---
+
+### 2026-08-27: `compare.py` dataset2 support (Step 4b) — stage eligibility by row presence, not declared config
+
+**What I decided:**
+- Added `experiments/reporting/compare.py` (`compare_retrieval`/`compare_intent`/`compare_generation`, pure dict-in dict-out) and wired `--stage` into `experiments/compare.py`, mirroring `report.py`'s dataset2 branch/delegate pattern from Step 4a.
+- Whether a stage is "comparable" between two runs is decided by looking at the rows themselves (does any row have `recall`/`intent_match`/`generated_answer` filled in) — not by the run's declared `stages` config field (`detect_stages()`). Row-presence is the one rule for all three stages; no special case needed for generation, since checking generation's own field doesn't care whether retrieval/intent ran in either run. `detect_stages()`-based eligibility would have needed an explicit exception carved out for generation to allow the gold-context-vs-full-pipeline comparison.
+- Generation compare buckets per-query deltas into `regressed`/`improved` using a **0.1 delta threshold** (a query counts as regressed if any RAGAS metric dropped by more than 0.1 between run A and run B) — same order of magnitude as the existing `< 0.5` "low score" cutoff in `summarize_generation()`, chosen for symmetry rather than derived from data.
+- No unit tests added for `reporting/compare.py` — consistent with `reporting/summarize.py` (Step 4a), which also shipped untested. Verified instead against real run data: gold-context-vs-full-pipeline generation compare, retrieval-compare-fails-clearly when one run lacks the stage, dataset1 compare unchanged, and auto-detect (no `--stage`) printing only stages applicable in both runs — all exercised directly against files in `artifacts/results/runs/`.
+- `compare.py` still only prints to terminal, same as before this change — no file output (unlike `report.py`'s `Tee`-to-`artifacts/results/reports/`). Not something 4b's spec asked for; flagged as open if wanted later.
+
+**Why:** Keeps the eligibility rule uniform and simple (one predicate per stage, checked the same way regardless of context) instead of writing a rule that works for retrieval/intent and then bolting on an exception for generation.
+
+**When to reconsider:** the 0.1 delta threshold is a guess, not derived from score distributions — revisit if it turns out to bucket too much/too little as noise once more comparisons get run.
+
+---

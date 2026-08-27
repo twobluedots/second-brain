@@ -9,6 +9,20 @@ import argparse
 import json
 from pathlib import Path
 
+from experiments.reporting.compare import (
+    applicable_generation,
+    applicable_intent,
+    applicable_retrieval,
+    compare_generation,
+    compare_intent,
+    compare_retrieval,
+)
+from experiments.reporting.print import (
+    print_generation_compare,
+    print_intent_compare,
+    print_retrieval_compare,
+)
+
 RUNS_DIR = Path(__file__).parent / "artifacts/results/runs"
 
 
@@ -27,15 +41,7 @@ def rank_of(row: dict) -> int | None:
     return row["retrieved_ids"].index(row["expected_id"]) + 1
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("run_a")
-    parser.add_argument("run_b")
-    args = parser.parse_args()
-
-    a_by_query, a_meta = load_run(args.run_a)
-    b_by_query, b_meta = load_run(args.run_b)
-
+def run_dataset1_compare(a_by_query: dict, a_meta: dict, b_by_query: dict, b_meta: dict):
     label_a = f"{a_meta['run_id']} ({a_meta['embedding']})"
     label_b = f"{b_meta['run_id']} ({b_meta['embedding']})"
 
@@ -130,6 +136,67 @@ def main():
         print(f"  SAME RANK  ({len(same_found)} queries)")
         for q, r, eid in same_found:
             print(f"  #{r} → #{r}  [{eid}]  {q}")
+
+
+# stage -> (applicable-row check, compare function, print function)
+STAGE_HANDLERS = {
+    "retrieval": (applicable_retrieval, compare_retrieval, print_retrieval_compare),
+    "intent": (applicable_intent, compare_intent, print_intent_compare),
+    "generation": (applicable_generation, compare_generation, print_generation_compare),
+}
+STAGE_ORDER = ["retrieval", "intent", "generation"]
+
+
+def run_dataset2_compare(args, rows_a: list[dict], a_meta: dict, rows_b: list[dict], b_meta: dict):
+    label_a = f"{a_meta['run_id']} ({a_meta.get('embedding') or a_meta.get('generation_context_source', 'n/a')})"
+    label_b = f"{b_meta['run_id']} ({b_meta.get('embedding') or b_meta.get('generation_context_source', 'n/a')})"
+
+    stages = [args.stage] if args.stage else STAGE_ORDER
+    any_compared = False
+
+    for stage in stages:
+        applicable, compare_fn, print_fn = STAGE_HANDLERS[stage]
+        has_a = bool(applicable(rows_a))
+        has_b = bool(applicable(rows_b))
+
+        if not (has_a and has_b):
+            if args.stage:
+                missing = a_meta["run_id"] if not has_a else b_meta["run_id"]
+                print(f"Run {missing} has no {stage} stage — can't compare")
+                return
+            continue
+
+        diff = compare_fn(rows_a, rows_b)
+        if diff is None:
+            if args.stage:
+                print(f"Runs {a_meta['run_id']} and {b_meta['run_id']} share no common {stage} queries")
+                return
+            continue
+
+        print_fn(diff, label_a, label_b)
+        any_compared = True
+
+    if not any_compared:
+        print(f"No comparable stage found between {a_meta['run_id']} and {b_meta['run_id']}")
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("run_a")
+    parser.add_argument("run_b")
+    parser.add_argument(
+        "--stage", choices=STAGE_ORDER,
+        help="dataset2 only: limit compare to one stage (default: every stage applicable in both runs)",
+    )
+    args = parser.parse_args()
+
+    a_by_query, a_meta = load_run(args.run_a)
+    b_by_query, b_meta = load_run(args.run_b)
+
+    if "target_system" in a_meta or "target_system" in b_meta:
+        run_dataset2_compare(args, list(a_by_query.values()), a_meta, list(b_by_query.values()), b_meta)
+    else:
+        run_dataset1_compare(a_by_query, a_meta, b_by_query, b_meta)
 
 
 if __name__ == "__main__":

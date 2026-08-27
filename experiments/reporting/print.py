@@ -96,6 +96,83 @@ def show_intent(row: dict):
 def _fmt_rank(r):
     return "✗" if r is None else f"#{r}"
 
+def print_retrieval_compare(diff: dict, label_a: str, label_b: str):
+    print(f"\n{'═' * 65}")
+    print("RETRIEVAL COMPARE")
+    sa, sb = diff["summary_a"], diff["summary_b"]
+    print(f"  A: {label_a}  (n={sa['n']})")
+    print(f"  B: {label_b}  (n={sb['n']})")
+    print(f"  common queries : {diff['n_common']}")
+    print(f"  avg recall     : {sa['avg_recall']:.3f}  ->  {sb['avg_recall']:.3f}")
+    print(f"  avg mrr        : {sa['avg_mrr']:.3f}  ->  {sb['avg_mrr']:.3f}")
+
+    if diff["regressed"]:
+        print(f"\n  B REGRESSED  ({len(diff['regressed'])} queries)")
+        for q, ra, rb in diff["regressed"]:
+            print(f"    {_fmt_rank(ra):>3} -> {_fmt_rank(rb):<3}  {q}")
+
+    if diff["improved"]:
+        print(f"\n  B IMPROVED  ({len(diff['improved'])} queries)")
+        for q, ra, rb in diff["improved"]:
+            print(f"    {_fmt_rank(ra):>3} -> {_fmt_rank(rb):<3}  {q}")
+
+    if diff["same_missed"]:
+        print(f"\n  BOTH MISSED  ({len(diff['same_missed'])} queries)")
+        for q in diff["same_missed"]:
+            print(f"    ✗ -> ✗   {q}")
+
+
+def print_intent_compare(diff: dict, label_a: str, label_b: str):
+    print(f"\n{'═' * 65}")
+    print("INTENT COMPARE")
+    sa, sb = diff["summary_a"], diff["summary_b"]
+    print(f"  A: {label_a}  (n={sa['n']})")
+    print(f"  B: {label_b}  (n={sb['n']})")
+    print(f"  common queries  : {diff['n_common']}")
+    print(f"  intent accuracy : {sa['intent_acc']:.3f}  ->  {sb['intent_acc']:.3f}")
+    print(f"  time_filter acc : {sa['time_filter_acc']:.3f}  ->  {sb['time_filter_acc']:.3f}")
+    print(f"  category_filter acc: {sa['category_filter_acc']:.3f}  ->  {sb['category_filter_acc']:.3f}")
+
+    if diff["broken"]:
+        print(f"\n  B BROKE  ({len(diff['broken'])} queries — right in A, wrong in B)")
+        for q in diff["broken"]:
+            print(f"    ✓ -> ✗   {q}")
+
+    if diff["fixed"]:
+        print(f"\n  B FIXED  ({len(diff['fixed'])} queries — wrong in A, right in B)")
+        for q in diff["fixed"]:
+            print(f"    ✗ -> ✓   {q}")
+
+    if diff["same_bad"]:
+        print(f"\n  BOTH WRONG  ({len(diff['same_bad'])} queries)")
+        for q in diff["same_bad"]:
+            print(f"    ✗ -> ✗   {q}")
+
+
+def print_generation_compare(diff: dict, label_a: str, label_b: str):
+    print(f"\n{'═' * 65}")
+    print("GENERATION COMPARE")
+    sa, sb = diff["summary_a"], diff["summary_b"]
+    print(f"  A: {label_a}  (n={sa['n']})")
+    print(f"  B: {label_b}  (n={sb['n']})")
+    print(f"  common queries : {diff['n_common']}")
+    for m in GENERATION_METRICS:
+        stats = diff["metric_stats"].get(m)
+        if stats:
+            sign = "+" if stats["mean_delta"] >= 0 else ""
+            print(f"  {m:<20}: mean delta {sign}{stats['mean_delta']:.3f}  (n={stats['n']})")
+
+    if diff["regressed"]:
+        print(f"\n  B REGRESSED  ({len(diff['regressed'])} queries)")
+        for q, deltas in diff["regressed"]:
+            parts = "  ".join(f"{m}={d:+.2f}" for m, d in deltas.items())
+            print(f"    {q}\n      {parts}")
+
+    if diff["improved"]:
+        print(f"\n  B IMPROVED  ({len(diff['improved'])} queries)")
+        for q, deltas in diff["improved"]:
+            parts = "  ".join(f"{m}={d:+.2f}" for m, d in deltas.items())
+            print(f"    {q}\n      {parts}")
 
 def show_generation(row: dict, notes: dict):
     context_ids = row["retrieved_ids"] if row.get("generation_context_source") == "retrieved" else row["expected_note_ids"]

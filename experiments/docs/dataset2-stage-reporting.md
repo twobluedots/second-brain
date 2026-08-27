@@ -39,4 +39,4 @@
 
 ## Implementation split (per usual build-session rhythm — one task = one commit = one decision entry)
 - **Step 4a**: `experiments/reporting/summarize.py` + `print.py` + `report.py` CLI wiring (`--stage`, dataset2 branch). Single-run reporting only.
-- **Step 4b**: `experiments/reporting/compare.py` + `compare.py` CLI wiring (`--stage`, shared-stage detection, generation cross-stage comparison, clear error on unsupported comparisons). (Be careful about generation is None for search/browse queries,consider when implementing compare logic )
+- **Step 4b**: `experiments/reporting/compare.py` + `compare.py` CLI wiring (`--stage`, shared-stage detection, generation cross-stage comparison, clear error on unsupported comparisons). (Be careful about generation is None for search/browse queries,consider when implementing compare logic ) — [x] done 2026-08-27, see `decisions.md` entry.
