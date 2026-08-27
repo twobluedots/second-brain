@@ -19,6 +19,7 @@ entries/*
 docs/archive/
 docs/learning/
 docs/learning.md
+docs/private/
 
 # IDE
 .vscode/
@@ -41,6 +42,7 @@ experiments/archive/
 experiments/*.json
 experiments/*.txt
 experiments/data/voice/
+experiments/data/real/
 experiments/data/note_analysis.json
 experiments/data/dataset1/notes_default.jsonl
 experiments/data/dataset1/ragas_testset/
@@ -54,3 +56,7 @@ whisper_results_*.json
 !data/notes/.gitkeep
 !data/voice_recordings/.gitkeep
 !data/images/.gitkeep
+docs/roadmap.md
+.github/copilot-instructions.md
+experiments/data/dataset1/ragas_generate.py
+experiments/data/agents_sdk_docs/chunking_input.jsonl

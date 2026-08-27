@@ -1,35 +1,3 @@
-Day 1 
-
-Inputs: 
-
-Image input: 
-- Tried two open source OCR: pytesseract and easyOCR 
-- not a single word could be extracted correctly. 
-- on the other side, gpt4 gives >90% accuracy
-- check further this post: https://www.reddit.com/r/LLMDevs/comments/1h8ra4a/seeking_advice_for_handwritten_text_recognition/
-
-Voice input:
-- Whisper lib works well on short and english texts
-- longer, turkis
-
-## YYYY-MM-DD: [Short Decision Title]
-
-**What I decided:** [One sentence]
-
-**Why:** [1-3 bullets of reasoning]
-- [Reason 1]
-- [Reason 2]
-
-**What I tried first:** [What didn't work]
-
-**Trade-offs:**
-- ✅ Pro: [Good thing]
-- ❌ Con: [Bad thing]
-
-**When to reconsider:** [Condition that would make you change this]
-
----
-
 ### 2025-10-30: Use GPT-4V instead of Tesseract/EasyOCR
 
 **What I decided:** Use GPT-4V for image-to-text extraction
@@ -735,7 +703,7 @@ DELETE FROM categories WHERE name NOT IN ('task','mood','journal','learning','re
 ### 2026-07-13: Process — re-cut M4 around the ask-a-question loop; two-track workflow adopted
 
 **What I decided:**
-- MVP bar is the end-to-end loop "ask a question, get an answer" (came from a real-user test: my husband asked exactly this). Sequence: commit RAG pipeline → minimal Ask page → README + cleanup + GitHub push → then a **2–3 week usage period** with no new features.
+- MVP bar is the end-to-end loop "ask a question, get an answer" (came from a real-user test). Sequence: commit RAG pipeline → minimal Ask page → README + cleanup + GitHub push → then a **2–3 week usage period** with no new features.
 - Adopted a two-track workflow: **build sessions** (small predefined weekly tasks, one task = one commit = one decision entry) and **learning sessions** (curiosity-driven, must end with an artifact in `docs/learning/`). Full guide: [`workflow.md`](workflow.md).
 - Tasks over ~1 hr get a half-page spec first ([`design/_template.md`](design/_template.md)); implementation standards decided once and applied via [`engineering-standards.md`](engineering-standards.md).
 

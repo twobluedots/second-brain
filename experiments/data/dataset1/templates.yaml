@@ -377,20 +377,6 @@ text_journal:
       - "good productive day"
       - "flow state day"
 
-  - id: t_journal_003
-    type: text
-    category: journal
-    language: en
-    word_range: [100, 180]
-    scenario: >
-      Work is frustrating — expectations don't match reality, something felt pointless,
-      or you felt unseen/underused. You're writing to process it, not to solve it.
-    style_notes: >
-      Somewhat raw. Might question whether you're in the right place. Ends without
-      resolution — either acceptance or still sitting with the frustration.
-    query_hints:
-      - "work frustration note"
-      - "feeling underused at work"
 
   - id: t_journal_004
     type: text
@@ -407,23 +393,6 @@ text_journal:
     query_hints:
       - "processing a conversation with [person]"
       - "hard talk note"
-
-  - id: t_journal_005
-    type: text
-    category: journal
-    language: en
-    word_range: [80, 130]
-    scenario: >
-      You know exactly what you need to do, you've been meaning to do it for days,
-      but you just... can't start. ADHD paralysis. You're writing the note partly
-      as procrastination, partly to externalize the stuck feeling.
-    style_notes: >
-      Meta and slightly self-deprecating. Aware of the irony of writing a note
-      about not doing the thing. Lists what needs doing. Maybe ends with a
-      micro-commitment ("okay just one thing").
-    query_hints:
-      - "stuck can't start anything"
-      - "task paralysis note"
 
   - id: t_journal_006
     type: text
@@ -484,22 +453,6 @@ text_journal:
     query_hints:
       - "karar veremiyorum not"
       - "iki seçenek arasında kalmak"
-
-  - id: t_journal_010
-    type: text
-    category: journal
-    language: en
-    word_range: [70, 120]
-    scenario: >
-      You've been comparing yourself to others — someone from your field moving faster,
-      a friend with a cleaner life, someone who seems to have figured it out.
-      The pressure is self-created and you know it but it still lands.
-    style_notes: >
-      Self-aware about the comparison trap. Doesn't pretend it doesn't affect you.
-      Might name the specific comparison. Ends with a small reframe or just honesty.
-    query_hints:
-      - "comparing myself to others"
-      - "feeling behind everyone else"
 
 text_reference:
 

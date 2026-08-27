@@ -71,7 +71,7 @@ first time the comparison means something.
 
 ### 2. `experiments/runner.py` (+ `config.py`, `grader.py`, `compare.py`, `report.py`) — the "test one piece" harness
 
-This is the retrieval-only track that produced `search_experiments.md` — builds its own throwaway
+This is the retrieval-only track that produced `retrieval_experiments.md` — builds its own throwaway
 Chroma index straight from `notes.jsonl` (not production, not the full `ask()` pipeline), already
 config-driven for comparing individual pieces: `EMBEDDING_MODELS`, `RERANKERS` in `config.py`, with
 `compare.py run_a run_b` / `report.py run_id` for diffing. This is the natural home for testing

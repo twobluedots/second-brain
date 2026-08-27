@@ -29,12 +29,8 @@
 {"note_id": "t_journal_001", "query": "overwhelm on sunday", "expected_note_id": "t_journal_001"}
 {"note_id": "t_journal_002", "query": "good productive day", "expected_note_id": "t_journal_002"}
 {"note_id": "t_journal_002", "query": "flow state day", "expected_note_id": "t_journal_002"}
-{"note_id": "t_journal_003", "query": "feeling underused at work", "expected_note_id": "t_journal_003"}
 {"note_id": "t_journal_004", "query": "processing a conversation with partner", "expected_note_id": "t_journal_004"}
 {"note_id": "t_journal_004", "query": "hard talk note", "expected_note_id": "t_journal_004"}
-{"note_id": "t_journal_005", "query": "task paralysis", "expected_note_id": "t_journal_005"}
-{"note_id": "t_journal_005", "query": "stuck can't start anything", "expected_note_id": "t_journal_005"}
-{"note_id": "t_journal_005", "query": "why do i always know what to build but then just stare at the code", "expected_note_id": "t_journal_005"}
 {"note_id": "t_journal_006", "query": "what I did and didn't do this week", "expected_note_id": "t_journal_006"}
 {"note_id": "t_journal_006", "query": "end of week review for app development project", "expected_note_id": "t_journal_006"}
 {"note_id": "t_journal_007", "query": "feeling behind on personal goals", "expected_note_id": "t_journal_007"}
@@ -115,15 +111,9 @@
 {"note_id": "t_journal_001", "query": "overwhelm with options on day off", "expected_note_id": "t_journal_001"}
 {"note_id": "t_journal_002", "query": "good productivity day", "expected_note_id": "t_journal_002"}
 {"note_id": "t_journal_002", "query": "flow state experience", "expected_note_id": "t_journal_002"}
-{"note_id": "t_journal_003", "query": "feeling frustrated at work", "expected_note_id": "t_journal_003"}
-{"note_id": "t_journal_003", "query": "not feeling valued at work", "expected_note_id": "t_journal_003"}
-{"note_id": "t_journal_003", "query": "struggle with project alignment", "expected_note_id": "t_journal_003", "ambiguous": true}
 {"note_id": "t_journal_004", "query": "processing conversation with [person]", "expected_note_id": "t_journal_004"}
 {"note_id": "t_journal_004", "query": "tough talk note", "expected_note_id": "t_journal_004"}
 {"note_id": "t_journal_004", "query": "reflection on hard convo", "expected_note_id": "t_journal_004"}
-{"note_id": "t_journal_005", "query": "task paralysis", "expected_note_id": "t_journal_005"}
-{"note_id": "t_journal_005", "query": "can't start anything", "expected_note_id": "t_journal_005"}
-{"note_id": "t_journal_005", "query": "fix that bug app note", "expected_note_id": "t_journal_005"}
 {"note_id": "t_journal_006", "query": "project X problems", "expected_note_id": "t_journal_006"}
 {"note_id": "t_journal_006", "query": "beta version of Personal Knowledge App", "expected_note_id": "t_journal_006"}
 {"note_id": "t_journal_006", "query": "next week plan: focus on project X", "expected_note_id": "t_journal_006"}

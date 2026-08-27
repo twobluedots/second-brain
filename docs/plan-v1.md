@@ -280,7 +280,6 @@ No API framework. No frontend framework. Just Python files.
 
 **Buffer tasks:**
 - [ ] Record a short demo video (even just screen recording with voiceover)
-- [ ] Write a short blog post or Twitter thread about what you learned
 - [ ] Set up a simple project board for v2 features
 - [ ] Plan your v2 milestones based on what you learned
 - [x] **Search log + date/type filters** — replaced `query_log` with unified `search_log` (query nullable, + content_type, date_preset, result_count). Search page has date preset buttons (Today / This week / This month / All time) and type filter (All / Text / Voice / Image). Text present → ChromaDB with metadata pre-filters; no text → SQLite `get_entries()` directly. `created_at_ts` (Unix int) backfilled in ChromaDB to enable `$gte` range filters. See decisions.md 2026-07-10.

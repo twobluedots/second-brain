@@ -3,7 +3,7 @@
 Read at session start. Written 2026-07-13. Update only when a rule provably fails.
 
 ## Two tracks, both real goals
-- **Build**: ship the app I actually use. **Learning**: go deep on concepts (evals, embeddings, retrieval), prepare for interviews.
+- **Build**: ship the app I actually use. **Learning**: go deep on concepts (evals, embeddings, retrieval).
 - One session = one mode. Name it at the start.
 - They feed each other: using the app daily → real queries in `search_log` → realistic eval data → meaningful experiments. Building without using starves the learning track.
 
@@ -19,7 +19,7 @@ Morning block (~2 hrs): app/build track. Afternoon block (~2 hrs): eval/learning
 ## Learning session
 1. Start from a question in `docs/learning.md` — not from a blank "let me explore."
 2. Big picture first (alternatives, tradeoffs, industry use), then *intentionally* choose which detail to go deep on.
-3. Prefer a small experiment in `experiments/` over an hour of theory. Explain concepts back in my own words and let Claude poke holes — that's interview practice.
+3. Prefer a small experiment in `experiments/` over an hour of theory. Explain concepts back in my own words and let Claude poke holes.
 4. End with **"wrap"**: Claude writes the artifact to `docs/learning/` (concepts, project relevance, open questions, interview Q&As).
 5. A learning session without an artifact didn't happen.
 
