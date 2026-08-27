@@ -1,5 +1,8 @@
 from pathlib import Path
-from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
+from chromadb.utils.embedding_functions import (
+    OpenAIEmbeddingFunction,
+    SentenceTransformerEmbeddingFunction,
+)
 
 ROOT = Path(__file__).parent
 
@@ -27,13 +30,15 @@ DATASET2_ANCHOR_DATE = "2026-08-21"
 EMBEDDING_MODELS = {
     "default": None,               # all-MiniLM-L6-v2, same as the main app
     "bge-large": SentenceTransformerEmbeddingFunction(model_name="BAAI/bge-large-en-v1.5"),
-    # "openai_small": ...,         # add when OpenAI key is available
+    "openai-3-small": OpenAIEmbeddingFunction(model_name="text-embedding-3-small", api_key_env_var="OPENAI_API_KEY"),
+    "openai-3-large": OpenAIEmbeddingFunction(model_name="text-embedding-3-large", api_key_env_var="OPENAI_API_KEY"),
 }
 
 # Reranker name → cross-encoder model id (lazy-loaded in pipeline/rerank.py)
 RERANKERS = {
     "cross-encoder-ms-marco": "cross-encoder/ms-marco-MiniLM-L-6-v2",
     "bge-reranker-base": "BAAI/bge-reranker-base",
+    "bge-reranker-v2-m3": "BAAI/bge-reranker-v2-m3",
 }
 
 # Where generated indexes and results are stored

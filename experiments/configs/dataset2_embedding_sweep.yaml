@@ -1,0 +1,20 @@
+# Equivalent of the old hardcoded __main__ loop in runner.py
+- dataset: dataset2
+  embedding_model: default
+  retriever: vector
+  n_results: 10
+
+- dataset: dataset2
+  embedding_model: bge-large
+  retriever: vector
+  n_results: 10
+
+- dataset: dataset2
+  embedding_model: openai-3-small
+  retriever: vector
+  n_results: 10
+
+- dataset: dataset2
+  embedding_model: openai-3-large
+  retriever: vector
+  n_results: 10

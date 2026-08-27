@@ -1,0 +1,23 @@
+# bge-large retrieval (n=15) reranked by each existing reranker
+- dataset: dataset1
+  embedding_model: bge-large
+  retriever: vector
+  n_results: 15
+
+- dataset: dataset1
+  embedding_model: bge-large
+  retriever: vector
+  n_results: 15
+  reranker: cross-encoder-ms-marco
+
+- dataset: dataset1
+  embedding_model: bge-large
+  retriever: vector
+  n_results: 15
+  reranker: bge-reranker-base
+
+- dataset: dataset1
+  embedding_model: bge-large
+  retriever: vector
+  n_results: 15
+  reranker: bge-reranker-v2-m3

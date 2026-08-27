@@ -1,0 +1,23 @@
+# openai-3-small retrieval (n=10) reranked by each existing reranker
+- dataset: dataset1
+  embedding_model: openai-3-small
+  retriever: vector
+  n_results: 10
+
+- dataset: dataset1
+  embedding_model: openai-3-small
+  retriever: vector
+  n_results: 10
+  reranker: cross-encoder-ms-marco
+
+- dataset: dataset1
+  embedding_model: openai-3-small
+  retriever: vector
+  n_results: 10
+  reranker: bge-reranker-base
+
+- dataset: dataset1
+  embedding_model: openai-3-small
+  retriever: vector
+  n_results: 10
+  reranker: bge-reranker-v2-m3

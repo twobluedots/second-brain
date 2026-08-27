@@ -12,11 +12,18 @@ Config keys used:
   retriever       str   retrieval method: "vector" (only option for now)
   n_results       int   how many results to return (default 5)
   reranker        str   optional reranker name from config.RERANKERS
+
+Vector-retrieval results are cached in-memory per (dataset, embedding_model,
+retriever, n_results, query) — reranker-only sweeps (same candidates, different
+reranker) hit cache instead of re-embedding/re-querying. Cache is process-lifetime
+only, not persisted to disk.
 """
 
 import chromadb
 
 from experiments.pipeline.rerank import load_reranker, rerank as rerank_candidates
+
+_retrieval_cache: dict[tuple, list[str]] = {}
 
 
 def retrieve(
@@ -28,10 +35,14 @@ def retrieve(
     n = config.get("n_results", 5)
     retriever = config.get("retriever", "vector")
 
-    if retriever == "vector":
-        candidate_ids = _vector_retrieve(query, collection, n)
-    else:
-        raise ValueError(f"Unknown retriever: {retriever!r}. Available: 'vector'")
+    cache_key = (config["dataset"], config["embedding_model"], retriever, n, query)
+    candidate_ids = _retrieval_cache.get(cache_key)
+    if candidate_ids is None:
+        if retriever == "vector":
+            candidate_ids = _vector_retrieve(query, collection, n)
+        else:
+            raise ValueError(f"Unknown retriever: {retriever!r}. Available: 'vector'")
+        _retrieval_cache[cache_key] = candidate_ids
 
     reranker_name = config.get("reranker")
     if reranker_name:
