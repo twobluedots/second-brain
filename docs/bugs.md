@@ -92,3 +92,13 @@ Bugs discovered but not yet prioritized for fixing. Update status as things chan
 - **When found**: 2026-07-10 · **Fixed**: 2026-07-16
 - **Cause**: results were rendered *inside* `if st.button("Search")` — `st.button` is True for exactly one rerun, so the ✏️ click's rerun skipped the whole block and the click landed in a void (the button-is-momentary trap). Follow-up: caching results in `session_state.search_result` fixed vanishing but went stale on delete/edit (cache invalidation — dialog only synced `entries` and `ask_result`).
 - **Fix**: store search *params* in session_state on click; recompute + render below the button on every rerun (Recents pattern). `NoteService.search()` gained `log_event` so only the click writes to search_log, not every rerun. Rule for the standards checklist: cache results only when recomputing is expensive; otherwise store intent, recompute.
+
+---
+
+## [FIXED] Tag chip click — infinite rerun loop
+- **Where**: `ui/components.py` — `render_entry_card()`'s tag pills (`st.pills`), used on Recents/Search/Categories
+- **What**: Clicking a tag chip (e.g. `#journal`) could hang the app in an endless rerun loop — page never finishes loading, browser shows a permanent spinner/"Stop" state
+- **When found**: 2026-08-27 · **Fixed**: 2026-08-27
+- **Cause**: `st.pills` is a *sticky* widget — its selected value persists in `st.session_state` across reruns, not just the one rerun where the click happened. The click handler treated "pill currently reports selected" as "user just clicked it" and reacted by calling `st.switch_page()`. Since the entry a tag was clicked from is guaranteed to reappear in its own tag-filtered results, that same widget (same key) redraws already-selected on the next render — `st.pills` reports the stale selection again with no new click, `switch_page` fires again, which redraws the same entry again... forever.
+- **Fix**: `del st.session_state[pills_key]` immediately after acting on a click, before `switch_page` — makes the click genuinely one-shot by clearing the sticky selection, so the widget starts unselected on its next render instead of replaying the old value. Verified the click fires exactly once and the delete executes without error in an isolated repro; confirmed no more hang after a live retest.
+- **Lesson for standards**: any "sticky" selection widget (`st.pills`, `st.segmented_control`, `st.radio`, `st.selectbox`) used to trigger a one-time *action* (not to hold ongoing UI state) needs its key cleared right after acting on it — otherwise the action can refire on any later rerun that redraws the same widget key, including loops when the action's own effect causes that redraw.

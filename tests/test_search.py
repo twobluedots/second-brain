@@ -82,6 +82,42 @@ def test_empty_query_date_filter_includes_recent(service):
     assert len(results) == 1
 
 
+# ── Tag filter ─────────────────────────────────────────────────────────────────
+
+def test_tag_filter_no_text_includes_matching_entry(service):
+    service.save_note("a python note", "text", category="learning", tags=["python", "health"])
+    results = service.search("", tag="python")
+    assert len(results) == 1
+    assert results[0]["content"] == "a python note"
+
+
+def test_tag_filter_no_text_excludes_non_matching_entry(service):
+    service.save_note("an unrelated note", "text", category="journal", tags=["cooking"])
+    results = service.search("", tag="python")
+    assert results == []
+
+
+def test_tag_filter_combined_with_text_query(service):
+    service.save_note("thinking about decorators", "text", category="learning", tags=["python"])
+    service.save_note("thinking about something else", "text", category="journal", tags=["cooking"])
+    results = service.search("thinking", tag="python")
+    assert results, "expected at least one result"
+    assert all("python" in (r.get("tags") or []) for r in results)
+
+
+def test_tag_filter_with_text_query_and_no_matching_tag_returns_empty(service):
+    service.save_note("thinking about decorators", "text", category="learning", tags=["python"])
+    results = service.search("thinking", tag="nonexistent")
+    assert results == []
+
+
+def test_get_entry_ids_by_tag(storage, service):
+    id1, _, _ = service.save_note("a python note", "text", category="learning", tags=["python"])
+    service.save_note("an unrelated note", "text", category="journal", tags=["cooking"])
+    assert storage.get_entry_ids_by_tag("python") == [id1]
+    assert storage.get_entry_ids_by_tag("nonexistent") == []
+
+
 # ── Search log ────────────────────────────────────────────────────────────────
 
 def test_search_log_written_for_text_query(service, storage):
@@ -106,6 +142,16 @@ def test_search_log_query_is_null_for_empty_search(service, storage):
             "SELECT * FROM search_log WHERE query IS NULL"
         ).fetchall()
     assert len(rows) >= 1
+
+
+def test_search_log_records_tag(service, storage):
+    service.save_note("a python note", "text", category="learning", tags=["python"])
+    service.search("", tag="python")
+    with storage._connect() as conn:
+        rows = conn.execute(
+            "SELECT * FROM search_log WHERE tag = 'python'"
+        ).fetchall()
+    assert len(rows) == 1
 
 
 # ── ChromaDB metadata ─────────────────────────────────────────────────────────

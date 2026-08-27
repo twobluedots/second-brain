@@ -139,6 +139,7 @@ class Storage:
                     query TEXT,
                     content_type TEXT,
                     date_preset TEXT,
+                    tag TEXT,
                     result_count INTEGER NOT NULL,
                     created_at TEXT NOT NULL
                 );
@@ -419,7 +420,17 @@ class Storage:
             entry["tags"] = json.loads(entry["tags"])
         return entry
 
-    def get_entries(self, content_type: Optional[str] = None, date_from: Optional[str] = None, category: Optional[str] = None, limit: int = 50) -> List[Dict]:
+    def get_entry_ids_by_tag(self, tag: str) -> List[str]:
+        """Active entry IDs with an exact tag match — used to restrict a Chroma query to a candidate set."""
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT id FROM entries WHERE deleted_at IS NULL "
+                "AND EXISTS (SELECT 1 FROM json_each(entries.tags) WHERE json_each.value = ?)",
+                (tag,)
+            ).fetchall()
+        return [row[0] for row in rows]
+
+    def get_entries(self, content_type: Optional[str] = None, date_from: Optional[str] = None, category: Optional[str] = None, tag: Optional[str] = None, limit: int = 50) -> List[Dict]:
         """SQLite-only retrieval with optional filters. Used when there is no text query for vector search."""
         clauses = ["deleted_at IS NULL"]
         params: list = []
@@ -432,6 +443,9 @@ class Storage:
         if category:
             clauses.append("category = ?")
             params.append(category)
+        if tag:
+            clauses.append("EXISTS (SELECT 1 FROM json_each(entries.tags) WHERE json_each.value = ?)")
+            params.append(tag)
         params.append(limit)
         with self._connect() as conn:
             rows = conn.execute(
@@ -492,13 +506,13 @@ class Storage:
     # SEARCH OPERATIONS
     # ============================================================================
 
-    def log_search(self, query: Optional[str], content_type: Optional[str], date_preset: Optional[str], result_count: int) -> None:
+    def log_search(self, query: Optional[str], content_type: Optional[str], date_preset: Optional[str], result_count: int, tag: Optional[str] = None) -> None:
         """Log a search event — query text nullable (filter-only searches have no text)."""
         try:
             with self._connect() as conn:
                 conn.execute(
-                    "INSERT INTO search_log (id, query, content_type, date_preset, result_count, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-                    (str(uuid.uuid4()), query or None, content_type, date_preset, result_count, self._iso_now())
+                    "INSERT INTO search_log (id, query, content_type, date_preset, tag, result_count, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    (str(uuid.uuid4()), query or None, content_type, date_preset, tag, result_count, self._iso_now())
                 )
         except Exception as e:
             logger.warning("Search logging failed: %s", e)
@@ -541,7 +555,7 @@ class Storage:
         except Exception as e:
             logger.warning("Ask logging failed: %s", e)
 
-    def search(self, query: str, limit: int = DEFAULT_SEARCH_LIMIT, where: Optional[Dict] = None) -> List[Dict]:
+    def search(self, query: str, limit: int = DEFAULT_SEARCH_LIMIT, where: Optional[Dict] = None, ids: Optional[List[str]] = None) -> List[Dict]:
         """
         Semantic search across entries using ChromaDB.
         Returns structured results with full entry data from SQLite.
@@ -550,10 +564,14 @@ class Storage:
             query: Search query string
             limit: Max results to return
             where: Optional ChromaDB metadata filter (e.g. content_type, created_at range)
+            ids: Optional candidate ID restriction (e.g. from an exact SQLite tag match) —
+                 Chroma ranks semantically within just this set instead of the whole collection.
 
         Returns:
             List of entry dicts, ordered by relevance
         """
+        if ids is not None and not ids:
+            return []
         actual_limit = min(limit, self.collection.count())
         if actual_limit == 0:
             return []
@@ -561,6 +579,8 @@ class Storage:
             kwargs: Dict = {"query_texts": [BGE_QUERY_INSTRUCTION + query], "n_results": actual_limit}
             if where:
                 kwargs["where"] = where
+            if ids is not None:
+                kwargs["ids"] = ids
             results = self.collection.query(**kwargs)
         except Exception as e:
             logger.error("ChromaDB search failed: %s", e)

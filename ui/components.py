@@ -95,13 +95,27 @@ def render_entry_card(entry: dict, key_prefix: str, show_category: bool = True):
 
         tags = entry.get("tags")
         if tags:
-            pills_html = " ".join(
-                f'<span style="background:rgba(0,0,0,0.06);color:#444;padding:1px 8px;'
-                f'border-radius:10px;font-size:0.75em;border:1px solid rgba(0,0,0,0.15);margin-right:4px">'
-                f'#{tag}</span>'
-                for tag in tags
+            pills_key = f"{key_prefix}_{entry['id']}_tags"
+            clicked = st.pills(
+                "tags",
+                options=tags,
+                format_func=lambda t: f"#{t}",
+                selection_mode="single",
+                default=None,
+                key=pills_key,
+                label_visibility="collapsed",
             )
-            st.markdown(pills_html, unsafe_allow_html=True)
+            if clicked:
+                # st.pills is sticky — its selection persists in session_state across
+                # reruns. Since the clicked entry's own tag guarantees it reappears in
+                # its own filtered results, an un-reset selection re-fires this block
+                # on every rerun with no new click, looping switch_page forever.
+                # Clearing it here makes the click genuinely one-shot.
+                del st.session_state[pills_key]
+                st.session_state["prefill_search_query"] = f"#{clicked}"
+                st.session_state["search_params"] = {"query": "", "content_type": None, "date_preset": "All time", "tag": clicked}
+                st.session_state["search_log_pending"] = True
+                st.switch_page("pages/search.py")
 
 
 @st.dialog("🎙️ Add Voice Note")

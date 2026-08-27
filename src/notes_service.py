@@ -72,7 +72,7 @@ class NoteService:
     def get_recent(self, limit: int = 10):
         return self.storage.get_recent(limit)
 
-    def search(self, query: str, content_type: str = None, date_from: str = None, date_preset: str = None, log_event: bool = True):
+    def search(self, query: str, content_type: str = None, date_from: str = None, date_preset: str = None, tag: str = None, log_event: bool = True):
         # Two execution paths for the same intent ("give me entries matching these criteria"):
         # - text present → ChromaDB vector search, metadata filters applied as pre-filters
         # - no text → SQLite only, filters run directly (vector search on empty string is meaningless)
@@ -87,13 +87,20 @@ class NoteService:
                 ts = int(datetime.fromisoformat(date_from.replace("Z", "+00:00")).timestamp())
                 clauses.append({"created_at_ts": {"$gte": ts}})
             where = None if not clauses else (clauses[0] if len(clauses) == 1 else {"$and": clauses})
-            results = self.storage.search(query, where=where)
+            if tag:
+                # Chroma has no tag metadata, so resolve the exact tag match in SQLite
+                # first (json_each, instant at this scale) and have Chroma rank only
+                # within that candidate set — no post-filtering, no starvation risk.
+                candidate_ids = self.storage.get_entry_ids_by_tag(tag)
+                results = self.storage.search(query, where=where, ids=candidate_ids)
+            else:
+                results = self.storage.search(query, where=where)
         else:
             ct = content_type if content_type and content_type != "all" else None
-            results = self.storage.get_entries(content_type=ct, date_from=date_from)
+            results = self.storage.get_entries(content_type=ct, date_from=date_from, tag=tag)
         # log_event=False for UI re-renders — a rerun recompute is not a new search intent
         if log_event:
-            self.storage.log_search(query=query or None, content_type=content_type, date_preset=date_preset, result_count=len(results))
+            self.storage.log_search(query=query or None, content_type=content_type, date_preset=date_preset, tag=tag, result_count=len(results))
         return results
 
     def get_by_date_range(self, start: str, end: str):
