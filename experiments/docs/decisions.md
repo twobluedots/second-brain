@@ -257,7 +257,7 @@ Templates: `v_ref_005`, `v_journal_004`, `t_journal_009`, `t_ref_005`, `t_insigh
 - Compare rule: a stage is only comparable between two runs if it was actually computed in both — hard requirement for retrieval/intent (error clearly, never print an empty/misleading table). Generation is the deliberate exception: comparable across runs regardless of whether context came from gold notes or a retriever, since "given this context, how good is the answer" stays well-defined either way. Comparing a gold-context-only run against a full-pipeline run on generation metrics is a first-class use case, not something to reject — it's how retrieval's downstream impact gets measured indirectly.
 - Intent reporting surfaces per-class confusion (`expected_intent → actual_intent` counts), not just aggregate accuracy. Generation reporting surfaces a low-score count (`< 0.5`) alongside each metric's mean. Both because an average alone hides exactly the failure pattern worth seeing (which classes get confused; a few badly hallucinated answers buried in an otherwise-good mean).
 - Row matching for compare stays keyed by `query` text, same convention already used in dataset1's `compare.py` — no new join key.
-- Written up as a spec first (`experiments/docs/dataset2-stage-reporting.md`) rather than implementing directly — 8 decisions, over the usual 3-decision single-task threshold. Split into two implementation tasks: 4a (summarize + print + `report.py` wiring), 4b (compare + `compare.py` wiring).
+- Written up as a spec first (`experiments/docs/specs/dataset2-stage-reporting.md`) rather than implementing directly — 8 decisions, over the usual 3-decision single-task threshold. Split into two implementation tasks: 4a (summarize + print + `report.py` wiring), 4b (compare + `compare.py` wiring).
 
 **Why:**
 - `report.py`/`compare.py` predate dataset2's multi-stage, sparse-column `stage_results` schema — they assume every row has the same shape (single `expected_id`, single `recall`/`mrr`). That breaks once rows can have any subset of {retrieval, intent, generation} populated depending on which stages a config selected.
@@ -368,3 +368,9 @@ Templates: `v_ref_005`, `v_journal_004`, `t_journal_009`, `t_ref_005`, `t_insigh
 **When to reconsider:** If, with more usage, long multi-topic notes start showing up often and dragging retrieval down, that's the signal to pick chunking back up. Do it with a scored eval next time (recall/MRR against `eval_set.jsonl`), not visual judgment. Category-aware chunking and small-to-big retrieval are the two threads most worth picking up (see `chunking_experiments.md` Next Steps). Separately, revisit repunctuation as a capture-time preprocessing step if the Whisper model-size bump (`src/processing.py` `base` tier) doesn't reduce how often notes arrive punctuation-starved.
 
 ---
+
+### 2026-08-28: Finished eval specs moved to `experiments/docs/specs/`
+
+**What I decided:** Frozen, shipped specs move to `experiments/docs/specs/` (`templates2-query-hints.md`, `dataset2-stage-reporting.md`), each with a `> **Status:** shipped …` banner linking its decision entry. `experiments/docs/` root keeps only living docs + this log. Split by lifecycle, mirroring the repo's `docs/design/` ⁄ `docs/*.md` split but inside the experiments track. Not a `dataset2/` subfolder (dataset2 also feeds the retrieval/generation docs — cross-cutting, not a silo); not merged into one doc (specs are point-in-time records, the how-to is living).
+
+**Also fixed in the same pass:** pre-existing broken cross-links between these docs (naming drift), and the stale "Not yet built" paragraph in `dataset2_experiments.md` — Step 4a/4b shipped 08-24 ⁄ 08-27, so it now reads "Built".

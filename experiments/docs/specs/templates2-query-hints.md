@@ -1,5 +1,9 @@
 # Templates2 + dataset2 — spec
 
+> **Status:** shipped 2026-08-21 — frozen spec, kept as a point-in-time record. Rationale and
+> outcome in [decisions.md](../decisions.md) (2026-08-21). Living how-to for using the dataset:
+> [dataset2_experiments.md](../dataset2_experiments.md).
+
 **Date:** 2026-08-21
 **Timebox:** design session (this doc) + separate implementation tasks per step below — 9 decisions, well over the 3-decision single-task threshold.
 
@@ -37,4 +41,4 @@ A new `templates2.yaml` + regenerated `generator.py` output (`notes2.jsonl`, `ev
 - [x] decisions.md entry written — `experiments/docs/decisions.md`, 2026-08-21 entry (not `docs/decisions.md` — that log is product milestones, this is the experiments/eval track)
 - [x] Committed
 
-Run plan and review notes for actually using this dataset: [experiments/docs/ask_dataset2_experiments.md](../../experiments/docs/ask_dataset2_experiments.md).
+Run plan and review notes for actually using this dataset: [dataset2_experiments.md](../dataset2_experiments.md).

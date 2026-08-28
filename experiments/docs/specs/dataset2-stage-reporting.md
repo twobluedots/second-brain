@@ -1,5 +1,9 @@
 # Dataset2 stage-aware reporting — spec
 
+> **Status:** shipped — Step 4a 2026-08-24, Step 4b 2026-08-27. Frozen spec, kept as a
+> point-in-time record; the unchecked "Committed" box below was ticked in the commits for those
+> steps. Rationale in [decisions.md](../decisions.md) (2026-08-24, 2026-08-27).
+
 **Date:** 2026-08-24
 **Timebox:** design session (this doc) + two separate implementation tasks below — 8 decisions, over the 3-decision threshold.
 

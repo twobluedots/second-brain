@@ -1,6 +1,6 @@
 # Dataset2 — what to check and how to run it
 
-Companion to [templates2-query-hints.md](../../docs/design/templates2-query-hints.md) (the spec) and
+Companion to [templates2-query-hints.md](specs/templates2-query-hints.md) (the spec) and
 [decisions.md](decisions.md) (why). This doc is the practical "picking this back up" reference —
 what to keep in mind reviewing the raw data, and the two separate ways to actually run experiments
 against it.
@@ -108,10 +108,18 @@ hardcoded loop in `__main__`.
   `DATASET2_ANCHOR_DATE` reference point (not wall-clock time) so `days_ago` → `created_at` stays
   reproducible run-to-run.
 
-**Not yet built:** `report.py`/`compare.py` still only understand dataset1's row shape
-(`expected_id`, `ambiguous`) — they don't know about dataset2's `stage_results` schema
-(retrieval/intent/generation, individually or combined) yet. Spec'd in
-[dataset2-stage-reporting.md](dataset2-stage-reporting.md), tracked as its own implementation session.
+**Built (Step 4a 2026-08-24, Step 4b 2026-08-27):** `report.py`/`compare.py` now understand
+dataset2's stage-results schema, via a new `experiments/reporting/` package (`summarize.py` /
+`compare.py` / `print.py`, split by function) and a `--stage {retrieval,intent,generation}` flag on
+both CLIs; omit `--stage` to get every stage present in the run. `report.py` writes one
+`<run_id>_<stage>_report.txt` per stage — intent reports show per-class confusion
+(`expected → actual` counts), generation reports show a `< 0.5` low-score count alongside each
+metric's mean plus a per-row drill-down (query + context notes + answer + 4 RAGAS scores).
+`compare.py` diffs any stage that was actually computed in both runs (errors clearly otherwise);
+generation stays comparable across a gold-context run and a full-pipeline run, since "given this
+context, how good is the answer" is well-defined either way. Spec:
+[dataset2-stage-reporting.md](specs/dataset2-stage-reporting.md); rationale in
+[decisions.md](decisions.md) (2026-08-24, 2026-08-27).
 
 **Track 1 tells you the full pipeline doesn't fall over on these queries, once it's pointed at the
 right notes. Track 2 is where "is analyzer/generation/retrieval individually correct" actually gets
