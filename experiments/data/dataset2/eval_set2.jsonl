@@ -37,7 +37,7 @@
 {"note_id": "v2_ach_002b", "query": "did I do the habit again a couple days ago?", "target_system": "ask", "intent": "qa", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["v2_ach_002b"]}
 {"note_id": "v2_ach_002c", "query": "first time doing the habit this week", "target_system": "search", "expected_note_ids": ["v2_ach_002c"]}
 {"note_id": "v2_ach_002c", "query": "started the habit again", "target_system": "search", "expected_note_ids": ["v2_ach_002c"]}
-{"note_id": "v2_ach_002c", "query": "when did I start doing the habit this week?", "target_system": "ask", "intent": "factual", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["v2_ach_002c"]}
+{"note_id": "v2_ach_002c", "query": "when did I start doing the habit this week?", "target_system": "ask", "intent": "factual", "expected_time_filter": "this_week", "expected_category_filter": null, "expected_note_ids": ["v2_ach_002c"]}
 {"note_id": "t2_mood_001", "query": "tired but can't switch off", "target_system": "search", "expected_note_ids": ["t2_mood_001"]}
 {"note_id": "t2_mood_001", "query": "late night mind racing", "target_system": "search", "expected_note_ids": ["t2_mood_001"]}
 {"note_id": "t2_mood_001", "query": "how do I feel late at night when I can't sleep", "target_system": "ask", "intent": "qa", "expected_time_filter": null, "expected_category_filter": null, "expected_note_ids": ["t2_mood_001"]}

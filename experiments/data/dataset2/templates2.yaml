@@ -310,7 +310,7 @@ voice_achievement:
     query_hints_ask:
       - text: "when did I start doing the habit this week"
         intent: factual
-        expected_time_filter: null
+        expected_time_filter: this_week
         expected_category_filter: null
 
 
