@@ -351,3 +351,20 @@ Templates: `v_ref_005`, `v_journal_004`, `t_journal_009`, `t_ref_005`, `t_insigh
 **When to reconsider:** the 0.1 delta threshold is a guess, not derived from score distributions — revisit if it turns out to bucket too much/too little as noise once more comparisons get run.
 
 ---
+
+### 2026-08-28: Semantic chunking — explored, not adopted for v2
+
+**What I decided:** Keep indexing notes whole. The chunking experiment (`experiments/chunking_experiment.py`, 4 methods in `chunk.py`, run 2026-08-19 on 10 real notes, committed 2026-08-28) stays a standalone visual comparison — not wired into `runner.py`, the retrieval eval, or the app pipeline. Code + `chunking_experiments.md` committed as exploratory reference with a banner saying so.
+
+**Why:**
+- Judged visually, not scored — no metric evidence that any method beats whole-note indexing for this note style, so nothing to act on yet.
+- v2's focus is tag capture + starting the usage clock; a chunking change is scope the plan explicitly parks.
+
+**What the run did establish:**
+- Repunctuation is a prerequisite for any sentence-based chunker — raw voice transcripts arrive too under-punctuated to split (1 detected sentence in a 1353-char note). An LLM repunctuation pass (`repunctuate.py`, gpt-4o-mini, ~$0.003 for 10 notes) raised sentence counts 2–20x on affected notes.
+- Repunctuation emits paragraph breaks as a near-free side effect that every downstream chunker currently discards — an untested coarse-segmentation signal.
+- Context-aware (`late`) vs isolated (`breakpoint`) sentence embeddings move boundary positions, not just detection quality, on the same note with identical merge logic.
+
+**When to reconsider:** If, with more usage, long multi-topic notes start showing up often and dragging retrieval down, that's the signal to pick chunking back up. Do it with a scored eval next time (recall/MRR against `eval_set.jsonl`), not visual judgment. Category-aware chunking and small-to-big retrieval are the two threads most worth picking up (see `chunking_experiments.md` Next Steps). Separately, revisit repunctuation as a capture-time preprocessing step if the Whisper model-size bump (`src/processing.py` `base` tier) doesn't reduce how often notes arrive punctuation-starved.
+
+---
