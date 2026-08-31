@@ -280,6 +280,39 @@ distribution matches your domain.** Here it didn't.
 
 ---
 
+## Analyzer Stage — Intent & Filter Extraction: Status and Known Limitations
+
+The Ask pipeline's analyzer (`src/rag/analyzer.py`) runs *before* retrieval: it classifies the
+query's intent (`browse`/`qa`/`factual`/`pattern`) and extracts time/category filters that narrow
+the vector search — so its mistakes surface downstream as retrieval failures. dataset2 carries
+ground truth for all three fields, so the stage is graded on its own (`stages: [intent]`).
+Latest pass (56 ask rows, 2026-08-24): **intent accuracy 0.821, time_filter 0.946,
+category_filter 0.929.**
+
+Known limitations — documented deliberately rather than fixed now:
+
+- **The `factual`/`qa` boundary is fuzzy — in the labels and in the classifier.** 6 of the 10
+  intent misses are `factual → qa`. The labeling pass showed several rows are defensible either
+  way, and the classifier itself flips on exactly this boundary between identical runs
+  (accuracy 0.821 vs 0.857 back-to-back — single-run numbers aren't trustworthy for this stage;
+  average N runs). Whether `factual` should exist as a separate intent at all is
+  an open question, **to be settled from real usage** — checking which of the two code paths
+  actually produces better answers for these queries — not from more synthetic relabeling.
+  See `decisions.md` (2026-08-24).
+- **Time-filter over-extraction.** The analyzer sometimes reads habitual phrasing as a time
+  window — e.g. `"what do I usually feel before the week starts"` → `this_week`, which then
+  narrows retrieval *away from* the older notes a pattern question needs. One prompt-tuning
+  attempt didn't move it much. Plan: watch real usage (`ask_log`); if it causes real misses,
+  loosen the filter's effect (soft boost rather than hard cutoff) before spending more on
+  prompt work.
+- **Category "misses" that are arguably correct extractions.** Most category_filter mismatches
+  are the analyzer extracting a category the ground truth leaves null (`"show me the tasks I've
+  completed"` → `task`). The ground truth follows real logged usage — users almost never imply a
+  category — but the extraction itself is reasonable. An eval-labeling judgment call, not a
+  clear defect.
+
+---
+
 ## Product Feature Implications
 
 | Finding | Feature | Status |
