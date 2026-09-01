@@ -32,12 +32,20 @@ Pulling a pattern out of notes written weeks apart:
 > Both clips run against the synthetic demo store, not real notes — see
 > [Try it with sample data](#setup) below.
 
+## Experiments & evaluation
+
+The retrieval and RAG pipeline was built eval-first — two datasets (the second modeled on real
+logged queries), a harness that grades retrieval, intent classification, and generation
+independently, and RAGAS scoring with the LLM judges themselves audited at the claim level.
+
+**Start here → [experiments/README.md](experiments/README.md)**
+
 ## Why
 
 Built for my own ADHD-style note-taking: capture has to be instant or it doesn't happen at all.
 The philosophy is **dump and mirror**: never organize at capture time; the app organizes for
 you and reflects back what you've been thinking. It's in real daily use, which also supplies
-the real usage data behind the evaluation work below.
+the real usage data behind the evaluation work above.
 
 ## What it does
 
@@ -66,16 +74,6 @@ src/           pure Python core — no Streamlit imports
 experiments/   eval datasets, harnesses, findings
 ```
 
-## Experiments & evaluation
-
-The retrieval + RAG pipeline was developed eval-first: two eval datasets (the second modeled on
-real logged queries), a harness that grades retrieval, intent classification, and generation
-independently, and RAGAS-based scoring with the LLM judges themselves audited at the claim
-level. Highlights: a reranker sweep showing reranking helps weak retrievers and hurts strong
-ones, and a faithfulness "failure" that was really a missing-metadata bug in the eval harness.
-
-**Start here → [experiments/README.md](experiments/README.md)**
-
 ## Setup
 
 ```bash
@@ -102,4 +100,4 @@ The `SECOND_BRAIN_*` vars are opt-in — without them the app uses your own stor
 In daily personal use and actively evolving — not a polished public product. Design decisions
 are logged as they're made, with revisit triggers ([docs/decisions.md](docs/decisions.md),
 [experiments/docs/decisions.md](experiments/docs/decisions.md)). Current direction: topic/tag
-organization and deployment 
+organization and deployment.
