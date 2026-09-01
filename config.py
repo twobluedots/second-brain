@@ -11,6 +11,12 @@ load_dotenv()
 DB_PATH = Path("data/database/entries.db")
 CHROMA_PATH = Path("./chroma_data")
 
+# Demo store — synthetic, built by scripts/seed_demo.py, opt-in via
+# SECOND_BRAIN_DB / SECOND_BRAIN_CHROMA env vars (see ui/services.py).
+# Under data/ so it's already covered by .gitignore.
+DEMO_DB_PATH = Path("data/demo/entries.db")
+DEMO_CHROMA_PATH = Path("data/demo/chroma_data")
+
 # Default categories -- defined by what you DO with the note, not the topic
 DEFAULT_CATEGORIES = [
     "task",

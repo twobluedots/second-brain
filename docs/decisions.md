@@ -886,3 +886,45 @@ DELETE FROM categories WHERE name NOT IN ('task','mood','journal','learning','re
 - ❌ Multi-tag AND filtering still deferred (per spec's own parking lot) — single-tag only
 
 **When to reconsider:** If tag search is used often enough that multi-tag AND filtering becomes a real ask, or if case-sensitivity causes real friction (e.g. typing `#Python` for a note tagged `python` and getting a false "no such tag" message).
+
+---
+
+### 2026-08-31: Demo seed store — synthetic sample data, opt-in via env var
+
+**What I decided:** `scripts/seed_demo.py` builds a self-contained demo store (`data/demo/`, gitignored) from a synthetic fixture. `get_storage()` uses it only when both `SECOND_BRAIN_DB` and `SECOND_BRAIN_CHROMA` are set — default launch unchanged.
+
+**Why:** README screenshots and a "clone and try it" path need sample data anyone can regenerate. Env-var opt-in avoids a demo-mode flag or auto-seed-on-empty, which would hand a new user fake notes to delete. Backdating happens in the script (`UPDATE created_at` + `reindex_all()`) rather than adding a `created_at` param to `Storage.save()` — no core change for a fixture-only need. Categories come from the fixture, so the build is deterministic and needs no API key.
+
+**Trade-offs:**
+- ✅ Zero change to `src/`; small opt-in branch in `ui/services.py`; safe to re-run
+- ❌ All rows seed as text — voice cards need an audio file the demo doesn't have
+
+**Full design:** [`design/demo-seed-store.md`](design/demo-seed-store.md)
+
+---
+
+### 2026-09-01: Demo corpus — curated fixture, not the eval set
+
+**What I decided:** `seed_demo.py` reads `scripts/fixtures/demo_notes.jsonl` (39 notes: 18 carried over from the eval set, 21 new short practical ones). Eval fixture untouched.
+
+**Why:** The eval set is built for retrieval eval, not for a demo. Its deliberate near-duplicate hard negatives make Ask look broken when they land in one citation list, and its long rambling notes don't read well as sample data. A separate fixture also means demo content can be hand-edited without shifting eval numbers.
+
+**Trade-offs:**
+- ✅ Eval numbers untouched; demo corpus readable and editable as one file
+- ❌ The 18 carried-over notes are duplicated across two fixtures, and demo notes retrieve well by construction
+
+**When to reconsider:** If v2 topics/tags need demo notes that carry tags.
+
+---
+
+### 2026-09-01: README demo — two GIFs plus collapsed stills
+
+**What I decided:** Demo section directly under the intro: `demo-capture.gif` (11.3s) then `demo-ask.gif` (13.1s), with two Ask screenshots collapsed in `<details>`. 2.1 MB total in `docs/assets/`.
+
+**Why:** An autoplaying GIF needs zero clicks; a linked screen recording doesn't get watched in a 2-minute skim. Two clips cover capture, auto-categorization and grounded retrieval. Text capture plus voice Ask shows both input modes, and the note captured in clip 1 comes back as a cited source in clip 2.
+
+**Trade-offs:**
+- ✅ 2.1 MB, loads instantly, ffmpeg-only toolchain
+- ❌ Re-shoot needed whenever the UI changes; the 2.8× speedup hides real LLM latency
+
+**When to reconsider:** After v2 topics/tags land, since the nav and note cards will change.
