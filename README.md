@@ -6,7 +6,7 @@ over your own notes.
 
 ## Demo
 
-Capture a note — no tagging, no filing; the category is assigned on save.
+Capture a note. The category is assigned on save, and tags are optional for when you want them.
 
 ![Capturing a text note, auto-categorized as reference](docs/assets/demo-capture.gif)
 
@@ -49,20 +49,20 @@ the real usage data behind the evaluation work above.
 
 ## What it does
 
-- **Capture** — text, voice (Whisper transcription), and image notes
+- **Capture** — text, voice (Whisper transcription), and photos with an optional caption
 - **Auto-categorize** — every note tagged on save (`task`, `mood`, `journal`, `learning`,
   `reference`, `insight`, `achievement`), LLM provider chain (OpenAI → Anthropic → Ollama)
   with manual override
-- **Search** — semantic search over all notes, with date and type filters
+- **Search** — semantic search over all notes, with date, type, and `#tag` filters
 - **Ask** — ask questions over your notes, get an answer grounded in them (retrieval + LLM)
 - **Browse & Mirror** — recents, per-category views, and a weekly summary of what you've been
   thinking about
 
 ## How it works
 
-Capture → Whisper/OCR → auto-categorize → store (**SQLite** as source of truth + **ChromaDB**
-vectors) → find again (filtered semantic search, or Ask: intent analysis → retrieval →
-grounded generation).
+Capture → Whisper transcription for voice → auto-categorize → store (**SQLite** as source of
+truth + **ChromaDB** vectors) → find again (filtered semantic search, or Ask: intent analysis →
+retrieval → grounded generation).
 
 ```
 ui/            Streamlit pages & components — no business logic
