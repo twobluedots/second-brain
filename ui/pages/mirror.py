@@ -37,12 +37,10 @@ if stats["top_category"] and stats["top_category"] in CATEGORY_MIRROR_LINES:
 st.divider()
 
 now_date = datetime.now(timezone.utc).date()
-dots = "".join(
-    "●" if (now_date - timedelta(days=i)) in stats["active_days"] else "○"
-    for i in range(6, -1, -1)
-)
+window = [now_date - timedelta(days=i) for i in range(6, -1, -1)]
+dots = "".join("●" if d in stats["active_days"] else "○" for d in window)
 st.markdown(f"**{dots}**")
-active_count = len(stats["active_days"])
+active_count = sum(1 for d in window if d in stats["active_days"])
 if active_count > 0:
     st.caption(f"You showed up {active_count} of 7 days")
 

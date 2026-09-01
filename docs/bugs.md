@@ -6,6 +6,16 @@ Bugs discovered but not yet prioritized for fixing. Update status as things chan
 
 ---
 
+## [FIXED] Mirror page — streak dots and "showed up N of 7 days" caption disagree
+- **Where**: `ui/pages/mirror.py` — activity dots + caption below them
+- **What**: Dots showed 5 filled but the caption read "You showed up 6 of 7 days" (or similar off-by-one).
+- **When found**: 2026-09-01 · **Fixed**: 2026-09-01
+- **Cause**: The dots render exactly 7 calendar dates (today back through 6 days ago), but the caption used `len(stats["active_days"])`. `active_days` comes from `get_mirror_stats()` (`src/notes_service.py`), which builds it from a rolling timestamp window `[now − 7 days, now]` — that window still includes part of the calendar day *7 days ago*, so an entry from that day landed in `active_days` and was counted by the caption but had no dot.
+- **Fix**: `mirror.py` now derives both the dots and the count from one shared `window = [now_date - timedelta(days=i) for i in range(6, -1, -1)]` list, so they can't drift. Service left unchanged — `week_count` / `category_breakdown` keep their "last 7×24h" meaning; an entry from exactly 7 days ago is now simply not shown on the Mirror dots.
+- **Related**: same UTC-vs-local timezone family as the Journal/Search "Today" backlog item in `docs/plan.md`.
+
+---
+
 ## [OPEN] Note truncation (400-char cap) removed from generator without a replacement strategy
 - **Where**: `src/rag/generator.py` — was `_NOTE_TRUNCATE = 400`, used in `_format_notes()` and `_plain_fallback()`
 - **What**: Each retrieved note's content was hard-truncated to 400 chars (mid-sentence) before being shown to the generation LLM. Deactivated 2026-08-12 while fixing eval context handling — removed rather than kept as an unexamined constant.
